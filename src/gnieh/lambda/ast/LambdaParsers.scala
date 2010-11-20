@@ -23,30 +23,64 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
   
   val environment = Map.empty[String, LambdaExpr]
 
+  /** 
+   * Line ::= `:quit'
+   *        | `:help'
+   *        | `:normal-order'
+   *        | `:show-steps'
+   *        | `:hide-steps'
+   *        | Assign
+   *        | Expr
+   */
   lazy val line: Parser[Node] = 
-    quit | help | beta | showSteps | hideSteps | assign | expr
+    quit | help | normalOrder | showSteps | hideSteps | assign | expr
   
+  /**
+   * Expr ::= Expr Factor
+   *        | `λ' Variable `.' Expr
+   *        | `\' Variable `.' Expr
+   *        | Factor
+   *        | error
+   */
   lazy val expr: PackratParser[LambdaExpr] =
     expr~factor ^^ {case f~p => App(f, p)} |
     (("\\" | "λ")~>variable)~("."~>expr) ^^ {case v ~ b => Abs(v, b)} |
     factor |
     failure("expression expected")
 
+  /**
+   * Factor ::= Ident
+   *          | Variable
+   *          | `(' Expr `)'
+   */
   lazy val factor: PackratParser[LambdaExpr] =
-    "[A-Z][a-z_]*".r ^^ {name => parsedIdent(name)} |
+    ident ^^ {name => parsedIdent(name)} |
     variable | "("~>expr<~")"
 
+  /**
+   * Variable ::= char
+   */
   lazy val variable: Parser[Var] =
     "[a-z]".r ^^ { case c => Var(c.charAt(0)) }
     
+  /**
+   * Assign ::= Ident `=' Expr
+   */
   lazy val assign: Parser[Assign] =
-    ("[A-Z][a-z_]*".r<~"=")~expr ^^ {case name~expr => Assign(name, expr)}
+    (ident<~"=")~expr ^^ {case name~expr => Assign(name, expr)}
+  
+  /**
+   * Ident ::= [A-Z][a-z0-9_]*
+   */
+  lazy val ident = "[A-Z][a-z0-9_]*".r
+  
+  lazy val fileLign: Parser[Assign] = assign<~";"
 
   lazy val quit: Parser[Command] = ":quit" ^^ { _ => Quit }
 
   lazy val help: Parser[Command] = ":help" ^^ { _ => Help }
 
-  lazy val beta: Parser[Command] = ":normal-order" ^^ { _ => NormalOrder }
+  lazy val normalOrder: Parser[Command] = ":normal-order" ^^ { _ => NormalOrder }
 
   lazy val showSteps: Parser[Command] = ":show-steps" ^^ { _ => ShowSteps }
 
