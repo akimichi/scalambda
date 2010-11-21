@@ -1,0 +1,5 @@
+#!/bin/sh
+
+SCALAMBDA_PATH=`dirname $0`/..
+
+scala -cp $SCALAMBDA_PATH/lib/scalambda.jar:$SCALAMBDA_PATH/lib/kiama.jar:$SCALAMBDA_PATH/lib/jline.jar gnieh.lambda.Lambda "$@"
