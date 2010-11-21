@@ -16,27 +16,39 @@
 */
 package gnieh.lambda
 
+import scala.io._
+import java.io.{ File, FileWriter }
+import scala.util.Properties
+
 import ast._
 import strategy._
+import util.Arm._
 
-import org.kiama.util.ParsingREPL
+import org.kiama.util.{ ParsingREPL, JLineConsole }
+import JLineConsole._
 
 object Lambda extends ParsingREPL[Node] with LambdaParsers {
 
   var strategy: InterpretationStrategy = NormalOrderStrategy
-  
+
   var showReductionSteps = true
-  
+
+  var libPath = new File(Properties.propOrElse("defs.path", ".")).getCanonicalFile
+
   override def setup(args: Array[String]) = {
+    // load the libraries passed to the command line
+    for (lib <- args) {
+      loadLib(lib)
+    }
     strategy.init
     println(
-"""λ Interpreter © 2010 Lucas Satabin
+      """\u03BB Interpreter \u00A9 2010 Lucas Satabin
 type :help for help and :quit to quit""")
     true
   }
-  
-  override def prompt = "λ > "
-  
+
+  override def prompt = "\u03BB > "
+
   def process(n: Node) = n match {
     case Assign(name, expr) =>
       environment += (name -> expr)
@@ -47,26 +59,83 @@ type :help for help and :quit to quit""")
     case NormalOrder => switchTo(NormalOrderStrategy)
     case ShowSteps => showReductionSteps = true
     case HideSteps => showReductionSteps = false
+    case Env =>
+      environment.foreach {
+        case (name, expr) => println(name + " = " + expr)
+      }
     case Quit => exit
-    case Help => println("""Available commands:
+    case Help =>
+      println("""Available commands:
  :help            Display this help
- :quit            Quit the λ Interpreter
+ :quit            Quit the \u03BB Interpreter
  :normal-order    Use normal order strategy to reduce the terms (default)
  :show-steps      Show the steps when reducing (enabled by default)
- :hide-steps      Do not show steps when reducing""")
+ :hide-steps      Do not show steps when reducing
+ :env             Show the current environment 
+ :load <name>     Load the definitions from the given library to environment
+ :save <name>     Save the current environment to the given library""")
+    case LoadLib(name) =>
+      loadLib(name)
+    case SaveLib(name) =>
+      saveLib(name)
   }
 
   def start = line
-  
+
+  /*
+   * Loads the library by its name and add the definitions in it to the environment.
+   */
+  private def loadLib(name: String) {
+    using(Source.fromFile(new File(libPath, name + ".lbd"))) { source =>
+      parseAll(file, source.bufferedReader) match {
+        case Success(assigns, _) =>
+          environment ++= assigns.map(as => (as.name -> as.expr))
+          println("Library " + name + " loaded in the environment")
+        case ns: NoSuccess =>
+          println("File corrupted: " + ns.msg)
+      }
+    } {
+      case t => println("Unable to load " + name + ".\n" + t.getMessage)
+    }
+  }
+
+  private def saveLib(name: String) {
+    var file = new File(libPath, name + ".lbd")
+    // if the file already exists, ask to overwrite it
+    val write = if (file.exists) {
+      var line: String = null
+      while (line != "y" && line != "n")
+        line = readLine("A library with this name already exists.\nDo you want to overwrite it? (y/n)")
+      line == "y"
+    } else {
+      true
+    }
+    if (write) {
+      using(new FileWriter(file, false)) { fw =>
+        fw.write("# saved on " + new java.util.Date + "\n")
+        fw.flush
+        for ((name, expr) <- environment) {
+          fw.write(name + "=" + expr)
+          fw.flush
+        }
+        println("Environment saved to library " + name)
+      } {
+        case t => println("Unable to save " + name + ".\n" + t.getMessage)
+      }
+    } else {
+      println("Save Aborted")
+    }
+  }
+
   private def switchTo(st: InterpretationStrategy) {
     strategy = st
     strategy.init
   }
-  
+
   private def steps(le: LambdaExpr) {
     var current = le
     var last: LambdaExpr = null
-    while(true) {
+    while (true) {
       last = current
       strategy(current) match {
         case Some(e) if last == e =>
@@ -74,15 +143,15 @@ type :help for help and :quit to quit""")
           return
         case Some(e) =>
           current = e
-          if(showReductionSteps)
-            println(" => " + current)
+          if (showReductionSteps)
+            println(" \u2192 " + current)
         case None =>
-          if(!showReductionSteps)
-            println(" => " + current)
-          println("Normal form reached with the " + strategy.name + " strategy.")
+          if (!showReductionSteps)
+            println(" \u2192 " + current)
+          println(" \u21F8")
           return
-      } 
+      }
     }
   }
-  
+
 }

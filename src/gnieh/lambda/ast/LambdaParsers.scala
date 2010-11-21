@@ -18,6 +18,7 @@ package gnieh.lambda.ast
 
 import scala.collection.mutable.Map
 import scala.util.parsing.combinator.{ RegexParsers, PackratParsers }
+import java.io.File
 
 trait LambdaParsers extends RegexParsers with PackratParsers {
   
@@ -29,22 +30,25 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    *        | `:normal-order'
    *        | `:show-steps'
    *        | `:hide-steps'
+   *        | `:env'
+   *        | `:save' Path
+   *        | `:load' Path
    *        | Assign
    *        | Expr
    */
   lazy val line: Parser[Node] = 
-    quit | help | normalOrder | showSteps | hideSteps | assign | expr
+    quit | help | normalOrder | showSteps | hideSteps | env | load | save | assign | expr
   
   /**
    * Expr ::= Expr Factor
-   *        | `λ' Variable `.' Expr
+   *        | `\u03BB' Variable `.' Expr
    *        | `\' Variable `.' Expr
    *        | Factor
    *        | error
    */
   lazy val expr: PackratParser[LambdaExpr] =
     expr~factor ^^ {case f~p => App(f, p)} |
-    (("\\" | "λ")~>variable)~("."~>expr) ^^ {case v ~ b => Abs(v, b)} |
+    (("\\" | "\u03BB")~>variable)~("."~>expr) ^^ {case v ~ b => Abs(v, b)} |
     factor |
     failure("expression expected")
 
@@ -74,7 +78,16 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    */
   lazy val ident = "[A-Z][a-z0-9_]*".r
   
-  lazy val fileLign: Parser[Assign] = assign<~";"
+  lazy val file: Parser[List[Assign]] = opt("#.*$".r)~>rep(assign<~";")
+  
+  /**
+   * Path ::= [A-Za-z0-9_\-]+
+   */
+  lazy val path: Parser[String] = "[A-Za-z0-9_\\-]+".r
+  
+  lazy val load: Parser[LoadLib] = ":load"~>path ^^ LoadLib
+  
+  lazy val save: Parser[SaveLib] = ":save"~>path ^^ SaveLib
 
   lazy val quit: Parser[Command] = ":quit" ^^ { _ => Quit }
 
@@ -85,6 +98,8 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
   lazy val showSteps: Parser[Command] = ":show-steps" ^^ { _ => ShowSteps }
 
   lazy val hideSteps: Parser[Command] = ":hide-steps" ^^ { _ => HideSteps }
+  
+  lazy val env: Parser[Command] = ":env" ^^ { _ => Env }
   
   private def parsedIdent(id: String): LambdaExpr =
     environment.get(id) match {

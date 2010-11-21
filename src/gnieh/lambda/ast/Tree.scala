@@ -55,4 +55,6 @@ case object Help extends Command
 case object ShowSteps extends Command
 case object HideSteps extends Command
 case object NormalOrder extends Command
-final case class LoadLib(name: String) extends Command 
+case object Env extends Command
+final case class LoadLib(name: String) extends Command
+final case class SaveLib(name: String) extends Command

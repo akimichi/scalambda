@@ -7,6 +7,7 @@
   <property name="dist.dir" value="dist" />
   <property name="lib.dir" value="lib" />
   <property name="scripts.dir" value="scripts" />
+  <property name="defs.dir" value="defs" />
 
   <path id="scala.classpath">
     <fileset dir="${scala.home}/lib">
@@ -77,11 +78,18 @@
 
     <mkdir dir="${dist.dir}/bin" />
     <copy todir="${dist.dir}/bin">
-          <fileset dir="${scripts.dir}">
-            <include name="*" />
-          </fileset>
-        </copy>
+      <fileset dir="${scripts.dir}">
+        <include name="*" />
+      </fileset>
+    </copy>
     <chmod dir="${dist.dir}/bin" perm="a+rx" excludes="*.bat" />
+
+    <mkdir dir="${dist.dir}/defs" />
+    <copy todir="${dist.dir}/defs">
+      <fileset dir="${defs.dir}">
+        <include name="*" />
+      </fileset>
+    </copy>
 
   </target>
 
