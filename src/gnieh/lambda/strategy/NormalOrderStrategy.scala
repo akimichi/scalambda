@@ -38,7 +38,7 @@ object NormalOrderStrategy extends InterpretationStrategy {
     case Subst(Var(x), y, by) if(x == y) => by
     case Subst(v: Var, _, _) => v
     case Subst(App(f, p), v, by) => App(Subst(f, v, by), Subst(p, v, by))
-    case Subst(Abs(Var(x), b), v, by) if v != x => Subst(b, v, by)
+    case Subst(Abs(Var(x), b), v, by) if v != x => Abs(Var(x), Subst(b, v, by))
     case Subst(a: Abs, _, _) => a
   }
   
