@@ -76,9 +76,9 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
   /**
    * Ident ::= [A-Z][a-z0-9_]*
    */
-  lazy val ident = "[A-Z][a-z0-9_]*".r
+  lazy val ident = "[A-Z][A-Za-z0-9_]*".r
   
-  lazy val file: Parser[List[Assign]] = opt("#.*$".r)~>rep(assign<~";")
+  lazy val file: Parser[List[Assign]] = opt("#.*\n".r)~>rep(assign<~";")
   
   /**
    * Path ::= [A-Za-z0-9_\-]+

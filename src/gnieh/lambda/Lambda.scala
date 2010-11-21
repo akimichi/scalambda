@@ -115,7 +115,7 @@ type :help for help and :quit to quit""")
         fw.write("# saved on " + new java.util.Date + "\n")
         fw.flush
         for ((name, expr) <- environment) {
-          fw.write(name + "=" + expr)
+          fw.write(name + "=" + expr + ";\n")
           fw.flush
         }
         println("Environment saved to library " + name)
