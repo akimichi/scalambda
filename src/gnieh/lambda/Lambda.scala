@@ -23,6 +23,7 @@ import scala.util.Properties
 import ast._
 import strategy._
 import util.Arm._
+import util.environment
 
 import org.kiama.util.{ ParsingREPL, JLineConsole }
 import JLineConsole._
@@ -51,7 +52,7 @@ type :help for help and :quit to quit""")
 
   def process(n: Node) = n match {
     case Assign(name, expr) =>
-      environment += (name -> expr)
+      environment.bind(name, expr)
       println(name + " added to the environment.")
     case le: LambdaExpr =>
       println(le)
@@ -60,7 +61,7 @@ type :help for help and :quit to quit""")
     case ShowSteps => showReductionSteps = true
     case HideSteps => showReductionSteps = false
     case Env =>
-      environment.foreach {
+      environment.definitions.foreach {
         case (name, expr) => println(name + " = " + expr)
       }
     case Quit => exit
@@ -89,7 +90,9 @@ type :help for help and :quit to quit""")
     using(Source.fromFile(new File(libPath, name + ".lbd"))) { source =>
       parseAll(file, source.bufferedReader) match {
         case Success(assigns, _) =>
-          environment ++= assigns.map(as => (as.name -> as.expr))
+          for(assign <- assigns) {
+            environment.bind(assign.name, assign.expr)
+          }
           println("Library " + name + " loaded in the environment")
         case ns: NoSuccess =>
           println("File corrupted: " + ns.msg)
@@ -114,7 +117,7 @@ type :help for help and :quit to quit""")
       using(new FileWriter(file, false)) { fw =>
         fw.write("# saved on " + new java.util.Date + "\n")
         fw.flush
-        for ((name, expr) <- environment) {
+        for ((name, expr) <- environment.definitions) {
           fw.write(name + "=" + expr + ";\n")
           fw.flush
         }

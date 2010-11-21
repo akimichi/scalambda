@@ -14,15 +14,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package gnieh.lambda.ast
+package gnieh.lambda
+package ast
 
 import scala.collection.mutable.Map
 import scala.util.parsing.combinator.{ RegexParsers, PackratParsers }
 import java.io.File
 
+import util.environment
+
 trait LambdaParsers extends RegexParsers with PackratParsers {
-  
-  val environment = Map.empty[String, LambdaExpr]
 
   /** 
    * Line ::= `:quit'
@@ -102,8 +103,8 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
   lazy val env: Parser[Command] = ":env" ^^ { _ => Env }
   
   private def parsedIdent(id: String): LambdaExpr =
-    environment.get(id) match {
+    environment.getExpr(id) match {
       case Some(expr) => expr
-      case None => LambdaError(id + " not found in the environment")
+      case None => LambdaError(id + " not found in the environment\n")
   }
 }

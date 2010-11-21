@@ -14,7 +14,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package gnieh.lambda.ast
+package gnieh.lambda
+package ast
+
+import util.environment
 
 import org.kiama.attribution.Attributable
 
@@ -22,23 +25,28 @@ sealed trait Node
 
 sealed trait LambdaExpr extends Node with Attributable
 final case class Var(name: Char) extends LambdaExpr {
-	override def toString = name.toString
+  override def toString = name.toString
 }
 final case class Abs(v: Var, body: LambdaExpr) extends LambdaExpr {
-	override def toString = "λ" + v + "." + body
+  override def toString = environment.getName(this) match {
+    case Some(name) => name
+    case _ => "λ" + v + "." + body
+  }
 }
 final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
-	override def toString = {
-	  val fun = f match {
-	    case _: Abs => "(" + f + ")"
-	    case _ => f.toString
-	  }
-	  val par = p match {
-	    case _: App | _: Abs => "(" + p + ")"
-	    case _ => p.toString
-	  }
-	  fun + " " + par
-	}
+  override def toString = environment.getName(this) match {
+    case Some(name) => name
+    case _ =>
+      val fun = f match {
+        case _: Abs if !environment.containsExpr(f) => "(" + f + ")"
+        case _ => f.toString
+      }
+      val par = p match {
+        case _: App | _: Abs if !environment.containsExpr(p) => "(" + p + ")"
+        case _ => p.toString
+      }
+      fun + " " + par
+  }
 }
 final case class Subst(expr: LambdaExpr, v: Char, by: LambdaExpr) extends LambdaExpr
 final case class LambdaError(message: String) extends LambdaExpr {
