@@ -55,14 +55,14 @@ type :help for help and :quit to quit""")
       environment.bind(name, expr)
       println(name + " added to the environment.")
     case le: LambdaExpr =>
-      println(le)
+      println(le.toString(!environment.containsExpr(le)))
       steps(le)
     case NormalOrder => switchTo(NormalOrderStrategy)
     case ShowSteps => showReductionSteps = true
     case HideSteps => showReductionSteps = false
     case Env =>
       environment.definitions.foreach {
-        case (name, expr) => println(name + " = " + expr)
+        case (name, expr) => println(name + " = " + expr.toString(false))
       }
     case Quit => exit
     case Help =>
@@ -118,7 +118,7 @@ type :help for help and :quit to quit""")
         fw.write("# saved on " + new java.util.Date + "\n")
         fw.flush
         for ((name, expr) <- environment.definitions) {
-          fw.write(name + "=" + expr + ";\n")
+          fw.write(name + "=" + expr.toString(false) + ";\n")
           fw.flush
         }
         println("Environment saved to library " + name)

@@ -23,34 +23,42 @@ import org.kiama.attribution.Attributable
 
 sealed trait Node
 
-sealed trait LambdaExpr extends Node with Attributable
+sealed trait LambdaExpr extends Node with Attributable {
+  def toString(alias: Boolean): String
+}
 final case class Var(name: Char) extends LambdaExpr {
   override def toString = name.toString
+  def toString(alias: Boolean): String = name.toString
 }
 final case class Abs(v: Var, body: LambdaExpr) extends LambdaExpr {
-  override def toString = environment.getName(this) match {
-    case Some(name) => name
-    case _ => "λ" + v + "." + body
+  override def toString = toString(true)
+  def toString(alias: Boolean): String = environment.getName(this) match {
+    case Some(name) if alias => name
+    case _ => "λ" + v + "." + body.toString(alias)
   }
 }
 final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
-  override def toString = environment.getName(this) match {
-    case Some(name) => name
+  override def toString = toString(true)
+  def toString(alias: Boolean): String = environment.getName(this) match {
+    case Some(name) if alias => name
     case _ =>
       val fun = f match {
-        case _: Abs if !environment.containsExpr(f) => "(" + f + ")"
-        case _ => f.toString
+        case _: Abs if !environment.containsExpr(f) || !alias => "(" + f.toString(alias) + ")"
+        case _ => f.toString(alias)
       }
       val par = p match {
-        case _: App | _: Abs if !environment.containsExpr(p) => "(" + p + ")"
-        case _ => p.toString
+        case _: App | _: Abs if !environment.containsExpr(p) || !alias => "(" + p.toString(alias) + ")"
+        case _ => p.toString(alias)
       }
       fun + " " + par
   }
 }
-final case class Subst(expr: LambdaExpr, v: Char, by: LambdaExpr) extends LambdaExpr
+final case class Subst(expr: LambdaExpr, v: Char, by: LambdaExpr) extends LambdaExpr {
+  def toString(alias: Boolean): String = throw new UnsupportedOperationException("toString")
+}
 final case class LambdaError(message: String) extends LambdaExpr {
   override def toString = message
+  def toString(alias: Boolean): String = toString
 }
 
 final case class Assign(name: String, expr: LambdaExpr) extends Node {
