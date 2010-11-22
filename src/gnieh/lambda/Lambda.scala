@@ -35,6 +35,8 @@ object Lambda extends ParsingREPL[Node] with LambdaParsers {
   var showReductionSteps = true
 
   var libPath = new File(Properties.propOrElse("defs.path", ".")).getCanonicalFile
+  
+  var aliasesEnabled = true
 
   override def setup(args: Array[String]) = {
     // load the libraries passed to the command line
@@ -55,11 +57,13 @@ type :help for help and :quit to quit""")
       environment.bind(name, expr)
       println(name + " added to the environment.")
     case le: LambdaExpr =>
-      println(le.toString(!environment.containsExpr(le)))
+      println(le.toString(!environment.containsExpr(le) && aliasesEnabled))
       steps(le)
     case NormalOrder => switchTo(NormalOrderStrategy)
     case ShowSteps => showReductionSteps = true
     case HideSteps => showReductionSteps = false
+    case ShowAliases => aliasesEnabled = true
+    case HideAliases => aliasesEnabled = false
     case Env =>
       environment.definitions.foreach {
         case (name, expr) => println(name + " = " + expr.toString(false))
@@ -74,7 +78,9 @@ type :help for help and :quit to quit""")
  :hide-steps      Do not show steps when reducing
  :env             Show the current environment 
  :load <name>     Load the definitions from the given library to environment
- :save <name>     Save the current environment to the given library""")
+ :save <name>     Save the current environment to the given library
+ :show-aliases    Display alias when an expression is known as an alias (default)
+ :hide-aliases    Do not display aliases""")
     case LoadLib(name) =>
       loadLib(name)
     case SaveLib(name) =>
@@ -147,10 +153,10 @@ type :help for help and :quit to quit""")
         case Some(e) =>
           current = e
           if (showReductionSteps)
-            println(" \u2192 " + current)
+            println(" \u2192 " + current.toString(aliasesEnabled))
         case None =>
           if (!showReductionSteps)
-            println(" \u2192 " + current)
+            println(" \u2192 " + current.toString(aliasesEnabled))
           println(" \u21F8")
           return
       }

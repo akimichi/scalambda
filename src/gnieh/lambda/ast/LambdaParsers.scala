@@ -34,12 +34,14 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    *        | `:env'
    *        | `:save' Path
    *        | `:load' Path
+   *        | `:show-aliases'
+   *        | `:hide-aliases'
    *        | Assign
    *        | Expr
    */
-  lazy val line: Parser[Node] = 
-    quit | help | normalOrder | showSteps | hideSteps | env | load | save | assign | expr
-  
+  lazy val line: Parser[Node] =
+    quit | help | normalOrder | showSteps | hideSteps | showAliases | hideAliases | env | load | save | assign | expr
+
   /**
    * Expr ::= Expr Factor
    *        | `\u03BB' Variable `.' Expr
@@ -48,10 +50,10 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    *        | error
    */
   lazy val expr: PackratParser[LambdaExpr] =
-    expr~factor ^^ {case f~p => App(f, p)} |
-    (("\\" | "\u03BB")~>variable)~("."~>expr) ^^ {case v ~ b => Abs(v, b)} |
-    factor |
-    failure("expression expected")
+    expr ~ factor ^^ { case f ~ p => App(f, p) } |
+      (("\\" | "\u03BB") ~> variable) ~ ("." ~> expr) ^^ { case v ~ b => Abs(v, b) } |
+      factor |
+      failure("expression expected")
 
   /**
    * Factor ::= Ident
@@ -59,36 +61,36 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    *          | `(' Expr `)'
    */
   lazy val factor: PackratParser[LambdaExpr] =
-    ident ^^ {name => parsedIdent(name)} |
-    variable | "("~>expr<~")"
+    ident ^^ { name => parsedIdent(name) } |
+      variable | "(" ~> expr <~ ")"
 
   /**
    * Variable ::= char
    */
   lazy val variable: Parser[Var] =
     "[a-z]".r ^^ { case c => Var(c.charAt(0)) }
-    
+
   /**
    * Assign ::= Ident `=' Expr
    */
   lazy val assign: Parser[Assign] =
-    (ident<~"=")~expr ^^ {case name~expr => Assign(name, expr)}
-  
+    (ident <~ "=") ~ expr ^^ { case name ~ expr => Assign(name, expr) }
+
   /**
    * Ident ::= [A-Z][a-z0-9_]*
    */
   lazy val ident = "[A-Z][A-Za-z0-9_]*".r
-  
-  lazy val file: Parser[List[Assign]] = opt("#.*\n".r)~>rep(assign<~";")
-  
+
+  lazy val file: Parser[List[Assign]] = opt("#.*\n".r) ~> rep(assign <~ ";")
+
   /**
    * Path ::= [A-Za-z0-9_\-]+
    */
   lazy val path: Parser[String] = "[A-Za-z0-9_\\-]+".r
-  
-  lazy val load: Parser[LoadLib] = ":load"~>path ^^ LoadLib
-  
-  lazy val save: Parser[SaveLib] = ":save"~>path ^^ SaveLib
+
+  lazy val load: Parser[LoadLib] = ":load" ~> path ^^ LoadLib
+
+  lazy val save: Parser[SaveLib] = ":save" ~> path ^^ SaveLib
 
   lazy val quit: Parser[Command] = ":quit" ^^ { _ => Quit }
 
@@ -99,12 +101,16 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
   lazy val showSteps: Parser[Command] = ":show-steps" ^^ { _ => ShowSteps }
 
   lazy val hideSteps: Parser[Command] = ":hide-steps" ^^ { _ => HideSteps }
-  
+
+  lazy val showAliases: Parser[Command] = ":show-aliases" ^^ { _ => ShowAliases }
+
+  lazy val hideAliases: Parser[Command] = ":hide-aliases" ^^ { _ => HideAliases }
+
   lazy val env: Parser[Command] = ":env" ^^ { _ => Env }
-  
+
   private def parsedIdent(id: String): LambdaExpr =
     environment.getExpr(id) match {
       case Some(expr) => expr
       case None => LambdaError(id + " not found in the environment\n")
-  }
+    }
 }

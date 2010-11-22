@@ -70,6 +70,8 @@ case object Quit extends Command
 case object Help extends Command
 case object ShowSteps extends Command
 case object HideSteps extends Command
+case object ShowAliases extends Command
+case object HideAliases extends Command
 case object NormalOrder extends Command
 case object Env extends Command
 final case class LoadLib(name: String) extends Command
