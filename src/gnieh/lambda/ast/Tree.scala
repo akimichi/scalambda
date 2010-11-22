@@ -73,6 +73,7 @@ case object HideSteps extends Command
 case object ShowAliases extends Command
 case object HideAliases extends Command
 case object NormalOrder extends Command
+case object CallByName extends Command
 case object Env extends Command
 final case class LoadLib(name: String) extends Command
 final case class SaveLib(name: String) extends Command

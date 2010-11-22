@@ -46,7 +46,6 @@ object Lambda extends ParsingREPL[Node] with LambdaParsers {
     for (lib <- args) {
       loadLib(lib)
     }
-    strategy.init
     println(
       """\u03BB Interpreter \u00A9 2010 Lucas Satabin
 type :help for help and :quit to quit""")
@@ -56,22 +55,30 @@ type :help for help and :quit to quit""")
   override def prompt = "\u03BB > "
 
   def process(n: Node) = n match {
+    // enrich environment
     case Assign(name, expr) =>
       environment.bind(name, expr)
       println(name + " added to the environment.")
+    // evaluate expression
     case le: LambdaExpr =>
       println(le.toString(!environment.containsExpr(le) && aliasesEnabled))
       steps(le)
+    // switch strategy
     case NormalOrder => switchTo(NormalOrderStrategy)
+    case CallByName => switchTo(CallByNameStrategy)
+    // display options
     case ShowSteps => showReductionSteps = true
     case HideSteps => showReductionSteps = false
     case ShowAliases => aliasesEnabled = true
     case HideAliases => aliasesEnabled = false
+    // show current environment
     case Env =>
       environment.definitions.foreach {
         case (name, expr) => println(name + " = " + expr.toString(false))
       }
+    // quit
     case Quit => exit
+    // help
     case Help =>
       println("""Available commands:
  :help            Display this help
@@ -141,7 +148,6 @@ type :help for help and :quit to quit""")
 
   private def switchTo(st: InterpretationStrategy) {
     strategy = st
-    strategy.init
   }
 
   private def steps(le: LambdaExpr) {
