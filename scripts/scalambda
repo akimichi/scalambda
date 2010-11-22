@@ -1,7 +1,7 @@
 #!/bin/sh
 
 SCALAMBDA_PATH=`dirname $0`/..
-CP=$SCALAMBDA_PATH/lib/scalambda.jar:$SCALAMBDA_PATH/lib/kiama.jar:$SCALAMBDA_PATH/lib/jline.jar
+CP=$SCALAMBDA_PATH/lib/scalambda.jar:$SCALAMBDA_PATH/lib/kiama.jar:$SCALAMBDA_PATH/lib/jline.jar:$SCALAMBDA_PATH/lib/commons-io.jar
 LIB_PATH=$SCALAMBDA_PATH/defs
 
 scala -cp $CP -Ddefs.path=$LIB_PATH gnieh.lambda.Lambda "$@"

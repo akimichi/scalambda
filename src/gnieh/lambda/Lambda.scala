@@ -17,8 +17,11 @@
 package gnieh.lambda
 
 import scala.io._
-import java.io.{ File, FileWriter }
+import java.io.File
+import java.nio.charset.Charset
 import scala.util.Properties
+
+import org.apache.commons.io.output.FileWriterWithEncoding
 
 import ast._
 import strategy._
@@ -93,7 +96,7 @@ type :help for help and :quit to quit""")
    * Loads the library by its name and add the definitions in it to the environment.
    */
   private def loadLib(name: String) {
-    using(Source.fromFile(new File(libPath, name + ".lbd"))) { source =>
+    using(Source.fromFile(new File(libPath, name + ".lbd"), "UTF-8")) { source =>
       parseAll(file, source.bufferedReader) match {
         case Success(assigns, _) =>
           for(assign <- assigns) {
@@ -120,7 +123,7 @@ type :help for help and :quit to quit""")
       true
     }
     if (write) {
-      using(new FileWriter(file, false)) { fw =>
+      using(new FileWriterWithEncoding(file, Charset.forName("UTF-8"), false)) { fw =>
         fw.write("# saved on " + new java.util.Date + "\n")
         fw.flush
         for ((name, expr) <- environment.definitions) {

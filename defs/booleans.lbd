@@ -1,6 +1,7 @@
-# saved on Sun Nov 21 21:58:39 CET 2010
-Or=λb.(λc.(b (λt.(λf.(t))) c));
-IfThenElse=λc.(λt.(λe.(c t e)));
-And=λb.(λc.(b c (λt.(λf.(f)))));
-False=λt.(λf.(f));
-True=λt.(λf.(t));
+# saved on Mon Nov 22 00:47:07 CET 2010
+Or=λb.λc.b (λt.λf.t) c;
+IfThenElse=λc.λt.λe.c t e;
+And=λb.λc.b c (λt.λf.f);
+True=λt.λf.t;
+False=λt.λf.f;
+Not=λb.b (λt.λf.f) (λt.λf.t);
