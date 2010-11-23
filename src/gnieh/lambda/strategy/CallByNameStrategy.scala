@@ -39,7 +39,7 @@ object CallByNameStrategy extends InterpretationStrategy {
     new Strategy {
       def apply(t: Term) = t match {
         case _: Abs => None
-        case _ => (s <+ notinlambda(one(s)))(t)
+        case _ => (s <+ one(notinlambda(s)))(t)
       }
     }
 
