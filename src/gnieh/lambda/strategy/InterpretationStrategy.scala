@@ -19,6 +19,7 @@ package strategy
 
 import ast._
 
+import org.kiama.attribution.Attribution._
 import org.kiama.rewriting.Rewriter._
 
 /**
@@ -28,8 +29,29 @@ import org.kiama.rewriting.Rewriter._
  *
  */
 abstract class InterpretationStrategy {
+  
+  private var current = -1
 
   val name: String
+
+  def fresh = {
+    current += 1
+    "$" + current
+  }
+  
+  lazy val fv: LambdaExpr ==> Set[String] =
+    attr {
+      case Var(x) => Set(x)
+      case App(f, p) => (f->fv) ++ (p->fv)
+      case Abs(Var(x), b) => (b->fv) - x
+    }
+  
+  def rename(exp: LambdaExpr, oldname: String, newname: String): LambdaExpr = exp match {
+    case Var(x) if x == oldname => Var(newname)
+    case Abs(Var(x), b) if x != oldname => Abs(Var(newname), rename(b, oldname, newname))
+    case App(f, p) => App(rename(f, oldname, newname), rename(p, oldname, newname))
+    case _ => exp
+  }
 
   /**
    * Only rewrites an application of a lambda abstraction to a substitution.
@@ -46,6 +68,10 @@ abstract class InterpretationStrategy {
       case Subst(Var(x), y, by) if (x == y) => by
       case Subst(v: Var, _, _) => v
       case Subst(App(f, p), v, by) => App(Subst(f, v, by), Subst(p, v, by))
+      case Subst(Abs(Var(x), b), v, by) if (v != x) && (by->fv).contains(x) =>
+        val y = fresh
+        val newb = rename(b, x, y)
+        Abs(Var(y), Subst(newb, v, by))
       case Subst(Abs(Var(x), b), v, by) if v != x => Abs(Var(x), Subst(b, v, by))
       case Subst(a: Abs, _, _) => a
     }

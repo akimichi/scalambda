@@ -43,9 +43,9 @@ sealed trait LambdaExpr extends Node with Attributable {
 /**
  * A variable
  */
-final case class Var(name: Char) extends LambdaExpr {
+final case class Var(name: String) extends LambdaExpr {
 //  override def toString = name.toString
-  def toString(alias: Boolean): String = name.toString
+  def toString(alias: Boolean): String = name
   def ~=(other: LambdaExpr): Boolean = false // TODO
 }
 final case class Abs(v: Var, body: LambdaExpr) extends LambdaExpr {
@@ -73,7 +73,7 @@ final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
   }
   def ~=(other: LambdaExpr): Boolean = false // TODO
 }
-final case class Subst(expr: LambdaExpr, v: Char, by: LambdaExpr) extends LambdaExpr {
+final case class Subst(expr: LambdaExpr, v: String, by: LambdaExpr) extends LambdaExpr {
   def toString(alias: Boolean): String = throw new UnsupportedOperationException("toString")
   def ~=(other: LambdaExpr): Boolean = throw new UnsupportedOperationException("~=")
 }

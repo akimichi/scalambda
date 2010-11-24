@@ -71,7 +71,7 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    * Variable ::= char
    */
   lazy val variable: Parser[Var] =
-    "[a-z]".r ^^ { case c => Var(c.charAt(0)) }
+    "[a-z]".r ^^ Var
 
   /**
    * Assign ::= Ident `=' Expr
