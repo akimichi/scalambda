@@ -38,7 +38,7 @@ object Lambda extends ParsingREPL[Node] with LambdaParsers {
   var showReductionSteps = true
 
   var libPath = new File(Properties.propOrElse("defs.path", ".")).getCanonicalFile
-  
+
   var aliasesEnabled = true
 
   override def setup(args: Array[String]) = {
@@ -66,6 +66,7 @@ type :help for help and :quit to quit""")
     // switch strategy
     case NormalOrder => switchTo(NormalOrderStrategy)
     case CallByName => switchTo(CallByNameStrategy)
+    case CallByValue => switchTo(CallByValueStrategy)
     // display options
     case ShowSteps => showReductionSteps = true
     case HideSteps => showReductionSteps = false
@@ -106,7 +107,7 @@ type :help for help and :quit to quit""")
     using(Source.fromFile(new File(libPath, name + ".lbd"), "UTF-8")) { source =>
       parseAll(file, source.bufferedReader) match {
         case Success(assigns, _) =>
-          for(assign <- assigns) {
+          for (assign <- assigns) {
             environment.bind(assign.name, assign.expr)
           }
           println("Library " + name + " loaded in the environment")
@@ -157,7 +158,7 @@ type :help for help and :quit to quit""")
       last = current
       strategy(current) match {
         case Some(e) if last == e =>
-          println("The term '" + last + "' diverges using the " + strategy.name + " strategy.")
+          println("The term '" + last.toString(false) + "' diverges using the " + strategy.name + " strategy.")
           return
         case Some(e) =>
           current = e

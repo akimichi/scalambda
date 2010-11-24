@@ -18,32 +18,42 @@ package gnieh.lambda
 package strategy
 
 import ast._
+
+import org.kiama.attribution.Attribution._
 import org.kiama.rewriting.Rewriter._
 
 /**
- * 
- * Call-by-name strategy: normal-order strategy but no reduction allowed within a lambda abstraction.
- * It means that the parameters passed to a function are evaluated only when used in the function.
- * 
  * @author Lucas Satabin
  *
  */
-object CallByNameStrategy extends InterpretationStrategy {
+object CallByValueStrategy extends InterpretationStrategy {
 
-  val name = "call-by-name"
+  val name = "call-by-value"
 
   /**
-   * the notinlambda strategy is similar to the oncetd strategy but stops as soon
-   * as it reached a lambda abstraction
+   * Attribute isValue indicates whether a lambda expression is a value.
+   * Under the call-by-value strategy, we do not try to reduce a value.
    */
-  def notinlambda(s: => Strategy): Strategy =
+  lazy val isValue: LambdaExpr ==> Boolean =
+    attr {
+      case _: Var | _: Abs => true
+      case _ => false
+    }
+
+  def byvalue(s: => Strategy): Strategy =
     new Strategy {
-      def apply(t: Term) = t match {
-        case _: Abs => None
-        case _ => (s <+ one(notinlambda(s)))(t)
+      def apply(t: Term): Option[Term] = t match {
+        case App(f, p) if (p -> isValue) =>
+          (s <+ one(byvalue(s)))(t)
+        case App(f, p) =>
+          (s <+ one(byvalue(s)))(p) match {
+            case Some(p2: LambdaExpr) => Some(App(f, p2))
+            case _ => None
+          }
+        case _ => None
       }
     }
 
-  lazy val stepStrategy = notinlambda(step) <* substitute
+  lazy val stepStrategy = byvalue(step) <* substitute
 
 }

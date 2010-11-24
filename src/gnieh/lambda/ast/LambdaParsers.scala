@@ -30,6 +30,7 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    *        | `:help'
    *        | `:normal-order'
    *        | `:call-by-name'
+   *        | `:call-by-value'
    *        | `:show-steps'
    *        | `:hide-steps'
    *        | `:env'
@@ -41,7 +42,7 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    *        | Expr
    */
   lazy val line: Parser[Node] =
-    quit | help | normalOrder | callByName | showSteps | hideSteps | showAliases | 
+    quit | help | normalOrder | callByName | callByValue | showSteps | hideSteps | showAliases | 
     hideAliases | env | load | save | assign | expr
 
   /**
@@ -101,6 +102,8 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
   lazy val normalOrder: Parser[Command] = ":normal-order" ^^ { _ => NormalOrder }
   
   lazy val callByName: Parser[Command] = ":call-by-name" ^^ { _ => CallByName }
+  
+  lazy val callByValue: Parser[Command] = ":call-by-value" ^^ { _ => CallByValue }
 
   lazy val showSteps: Parser[Command] = ":show-steps" ^^ { _ => ShowSteps }
 

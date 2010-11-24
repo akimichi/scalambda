@@ -23,22 +23,41 @@ import org.kiama.attribution.Attributable
 
 sealed trait Node
 
+/**
+ * AST node representing a lambda term.
+ * @author Lucas Satabin
+ *
+ */
 sealed trait LambdaExpr extends Node with Attributable {
+  /**
+   * Returns the String representation of this term
+   * @param alias whether aliases should be displayed
+   */
   def toString(alias: Boolean): String
+  /**
+   * Equals modulo renaming
+   */
+  def ~=(other: LambdaExpr): Boolean
 }
+
+/**
+ * A variable
+ */
 final case class Var(name: Char) extends LambdaExpr {
-  override def toString = name.toString
+//  override def toString = name.toString
   def toString(alias: Boolean): String = name.toString
+  def ~=(other: LambdaExpr): Boolean = false // TODO
 }
 final case class Abs(v: Var, body: LambdaExpr) extends LambdaExpr {
-  override def toString = toString(true)
+  //override def toString = toString(true)
   def toString(alias: Boolean): String = environment.getName(this) match {
     case Some(name) if alias => name
-    case _ => "λ" + v + "." + body.toString(alias)
+    case _ => "λ" + v.toString(false) + "." + body.toString(alias)
   }
+  def ~=(other: LambdaExpr): Boolean = false // TODO
 }
 final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
-  override def toString = toString(true)
+//  override def toString = toString(true)
   def toString(alias: Boolean): String = environment.getName(this) match {
     case Some(name) if alias => name
     case _ =>
@@ -52,13 +71,16 @@ final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
       }
       fun + " " + par
   }
+  def ~=(other: LambdaExpr): Boolean = false // TODO
 }
 final case class Subst(expr: LambdaExpr, v: Char, by: LambdaExpr) extends LambdaExpr {
   def toString(alias: Boolean): String = throw new UnsupportedOperationException("toString")
+  def ~=(other: LambdaExpr): Boolean = throw new UnsupportedOperationException("~=")
 }
 final case class LambdaError(message: String) extends LambdaExpr {
   override def toString = message
   def toString(alias: Boolean): String = toString
+  def ~=(other: LambdaExpr): Boolean = true
 }
 
 final case class Assign(name: String, expr: LambdaExpr) extends Node {
@@ -74,6 +96,7 @@ case object ShowAliases extends Command
 case object HideAliases extends Command
 case object NormalOrder extends Command
 case object CallByName extends Command
+case object CallByValue extends Command
 case object Env extends Command
 final case class LoadLib(name: String) extends Command
 final case class SaveLib(name: String) extends Command
