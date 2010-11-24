@@ -33,7 +33,7 @@ import JLineConsole._
 
 object Lambda extends ParsingREPL[Node] with LambdaParsers {
 
-  var strategy: InterpretationStrategy = NormalOrderStrategy
+  var strategy: InterpretationStrategy = CallByValueStrategy
 
   var showReductionSteps = true
 
