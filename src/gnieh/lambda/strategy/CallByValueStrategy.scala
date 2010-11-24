@@ -37,6 +37,7 @@ object CallByValueStrategy extends InterpretationStrategy {
   lazy val isValue: LambdaExpr ==> Boolean =
     attr {
       case _: Var | _: Abs => true
+      case App(_: Var, p) => p->isValue
       case _ => false
     }
 
