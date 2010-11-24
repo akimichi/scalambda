@@ -1,0 +1,10 @@
+# saved on Wed Nov 24 22:29:10 CET 2010
+First=λp.p (λt.λf.t);
+Pair=λf.λs.λb.b f s;
+Or=λb.λc.b (λt.λf.t) c;
+IfThenElse=λc.λt.λe.c t e;
+And=λb.λc.b c (λt.λf.f);
+False=λt.λf.f;
+True=λt.λf.t;
+Not=λb.b (λt.λf.f) (λt.λf.t);
+Second=λp.p (λt.λf.f);
