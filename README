@@ -1,0 +1,42 @@
+scalambda
+=========
+
+scalambda is a lambda calculus interpreter which allows to choose between different reduction strategies.
+
+It currently supports three different strategies:
+ - normal-order strategy which choose the leftmost outermost term to reduce
+ - call-by-name strategy which does not allow reduction inside a lambda abstraction
+ - call-by-value strategy which only reduces the left part of an application when the right part is a value (that is a term that cannot be further reduced)
+
+scalambda is designed after the presentation of the lambda calculus in "Types and Programming Languages" by Benjamin C. Pierce and is first a personal project used as companion to the book. At term it will contain more concepts from the book, such as the possibility to enable typed lambda calculus.
+
+Usage
+=====
+
+$ scalambda [file1 [file2 ...]]
+
+Starts scalambda. All the file passed in command line are processed as library files and scalambda will try to load the definition to the environment.
+
+once scalambda is started, you will get a prompt
+
+λ > 
+
+just type `:help' to get some help.
+
+You can enter any lambda expression that you want to evaluate under the current strategy like this:
+
+λ > (\x.x x) y
+(λx.x x) y
+ → y y
+ ⇸
+
+The last line indicates that the normal form under this strategy was reached (the default strategy is the call-by-value strategy).
+
+Build
+=====
+
+$ git clone git://github.com/gnieh/scalambda.git
+$ cd scalambda
+$ ant dist
+
+The project is compiled and a distribution is created in the `dist' directory.
