@@ -1,0 +1,12 @@
+# saved on Wed Nov 24 22:44:52 CET 2010
+Six=λs.λz.s s s s s s z;
+Seven=λs.λz.s s s s s s s z;
+Nine=λs.λz.s s s s s s s s s z;
+Four=λs.λz.s s s s z;
+Three=λs.λz.s s s z;
+Two=λs.λz.s s z;
+Ten=λs.λz.s s s s s s s s s s z;
+Eight=λs.λz.s s s s s s s s z;
+Zero=λs.λz.z;
+Five=λs.λz.s s s s s z;
+One=λs.λz.s z;
