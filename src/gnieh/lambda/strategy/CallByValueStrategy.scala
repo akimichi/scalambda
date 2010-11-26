@@ -41,20 +41,22 @@ object CallByValueStrategy extends InterpretationStrategy {
       case _ => false
     }
 
-  def byvalue(s: => Strategy): Strategy =
-    new Strategy {
-      def apply(t: Term): Option[Term] = t match {
-        case App(f, p) if (p -> isValue) =>
-          (s <+ one(byvalue(s)))(t)
-        case App(f, p) =>
-          (s <+ one(byvalue(s)))(p) match {
-            case Some(p2: LambdaExpr) => Some(App(f, p2))
-            case _ => None
-          }
-        case _ => None
-      }
-    }
+  /**
+   *      t1 -> t1'
+   *   ---------------   (oncetd)
+   *   t1 t2 -> t1' t2
+   *   
+   *      t2 -> t2'
+   *   ---------------
+   *   v1 t2 -> v1 t2'
+   *   
+   *   -------------------
+   *   (\x.t) v -> [x->v]t
+   */
+  lazy val byvalue = rule {
+    case App(Abs(Var(x), body), v) if v->isValue => Subst(body, x, v)
+  }
 
-  lazy val stepStrategy = byvalue(step) <* substitute
+  lazy val stepStrategy = notinlambda(byvalue) <* substitute
 
 }

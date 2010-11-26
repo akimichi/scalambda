@@ -32,18 +32,6 @@ object CallByNameStrategy extends InterpretationStrategy {
 
   val name = "call-by-name"
 
-  /**
-   * the notinlambda strategy is similar to the oncetd strategy but stops as soon
-   * as it reached a lambda abstraction
-   */
-  def notinlambda(s: => Strategy): Strategy =
-    new Strategy {
-      def apply(t: Term) = t match {
-        case _: Abs => None
-        case _ => (s <+ one(notinlambda(s)))(t)
-      }
-    }
-
   lazy val stepStrategy = notinlambda(step) <* substitute
 
 }
