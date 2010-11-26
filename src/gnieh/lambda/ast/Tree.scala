@@ -104,3 +104,4 @@ case object CallByValue extends Command
 case object Env extends Command
 final case class LoadLib(name: String) extends Command
 final case class SaveLib(name: String) extends Command
+final case class RemoveEnv(names: List[String]) extends Command

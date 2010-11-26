@@ -38,12 +38,13 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    *        | `:load' Path
    *        | `:show-aliases'
    *        | `:hide-aliases'
+   *        | `:rm' Ident+
    *        | Assign
    *        | Expr
    */
   lazy val line: Parser[Node] =
     quit | help | normalOrder | callByName | callByValue | showSteps | hideSteps | showAliases | 
-    hideAliases | env | load | save | assign | expr
+    hideAliases | env | load | save | assign | rm | expr
 
   /**
    * Expr ::= Expr Factor
@@ -89,7 +90,9 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
   /**
    * Path ::= [A-Za-z0-9_\-]+
    */
-  lazy val path: Parser[String] = "[A-Za-z0-9_\\-]+".r
+  lazy val path: Parser[String] = "[A-Za-z0-9_\\-]+(\\.lbd)?".r
+  
+  lazy val rm: Parser[RemoveEnv] = ":rm"~>rep1(ident) ^^ RemoveEnv
 
   lazy val load: Parser[LoadLib] = ":load" ~> path ^^ LoadLib
 

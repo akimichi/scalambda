@@ -46,6 +46,7 @@ object Lambda extends ParsingREPL[Node] with LambdaParsers {
     for (lib <- args) {
       loadLib(lib)
     }
+    LambdaConsole.init
     println(
       """\u03BB Interpreter \u00A9 2010 Lucas Satabin
 type :help for help and :quit to quit""")
@@ -74,24 +75,28 @@ type :help for help and :quit to quit""")
     case HideAliases => aliasesEnabled = false
     // show current environment
     case Env =>
-      environment.definitions.foreach {
-        case (name, expr) => println(name + " = " + expr.toString(false))
-      }
+      for((name, expr) <- environment.definitions)
+        println(name + " = " + expr.toString(false))
+    case RemoveEnv(names) =>
+      for(name <- names)
+        environment.unbind(name)
+      println(names.mkString("[", ", ", "]") + " removed from the environment")
     // quit
     case Quit => exit
     // help
     case Help =>
       println("""Available commands:
- :help            Display this help
- :quit            Quit the \u03BB Interpreter
- :normal-order    Use normal order strategy to reduce the terms (default)
- :show-steps      Show the steps when reducing (enabled by default)
- :hide-steps      Do not show steps when reducing
- :env             Show the current environment 
- :load <name>     Load the definitions from the given library to environment
- :save <name>     Save the current environment to the given library
- :show-aliases    Display alias when an expression is known as an alias (default)
- :hide-aliases    Do not display aliases""")
+ :help               Display this help
+ :quit               Quit the \u03BB Interpreter
+ :normal-order       Use normal order strategy to reduce the terms (default)
+ :show-steps         Show the steps when reducing (enabled by default)
+ :hide-steps         Do not show steps when reducing
+ :env                Show the current environment 
+ :rm <n1> [<n2> ...] Removes the given names from the environment
+ :load <name>        Load the definitions from the given library to environment
+ :save <name>        Save the current environment to the given library
+ :show-aliases       Display alias when an expression is known as an alias (default)
+ :hide-aliases       Do not display aliases""")
     case LoadLib(name) =>
       loadLib(name)
     case SaveLib(name) =>
@@ -104,7 +109,13 @@ type :help for help and :quit to quit""")
    * Loads the library by its name and add the definitions in it to the environment.
    */
   private def loadLib(name: String) {
-    using(Source.fromFile(new File(libPath, name + ".lbd"), "UTF-8")) { source =>
+    val libFile = 
+      if(name.endsWith(".lbd"))
+        new File(libPath, name)
+      else
+        new File(libPath, name + ".lbd")
+    
+    using(Source.fromFile(libFile, "UTF-8")) { source =>
       parseAll(file, source.bufferedReader) match {
         case Success(assigns, _) =>
           for (assign <- assigns) {

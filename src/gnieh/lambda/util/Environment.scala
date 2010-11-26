@@ -33,6 +33,8 @@ object environment {
   
   def definitions: Iterator[(String, LambdaExpr)] = wrapped.iterator
   
+  def names = wrapped.keys
+  
   def bind(name: String, expr: LambdaExpr) {
     if(inverse.contains(expr))
       println("This expression is already bound to " + inverse(expr))
@@ -41,7 +43,7 @@ object environment {
       inverse += (expr -> name)
     }
   }
-
+  
   def unbind(name: String) {
     wrapped.remove(name) match {
       case Some(expr) => inverse.remove(expr)

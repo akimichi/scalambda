@@ -22,6 +22,7 @@
     <pathelement location="${scala.home}/lib/scala-compiler.jar" />
     <pathelement location="${lib.dir}/kiama.jar" />
     <pathelement location="${lib.dir}/commons-io.jar" />
+    <pathelement location="${lib.dir}/jline.jar" />
     <pathelement location="${build.dir}" />
   </path>
 
