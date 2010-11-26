@@ -39,8 +39,8 @@ object NormalOrderStrategy extends InterpretationStrategy {
    *   ---------------
    *   v1 t2 -> v1 t2'
    *   
-   *   -------------------
-   *   (\x.t) v -> [x->v]t
+   *   -----------------------
+   *   (\x.t1) t2 -> [x->t2]t1
    *   
    *      t -> t'
    *   -------------
