@@ -45,6 +45,18 @@ abstract class InterpretationStrategy {
       case App(f, p) => (f -> fv) ++ (p -> fv)
       case Abs(Var(x), b) => (b -> fv) - x
     }
+  
+  /**
+   * Attribute isValue indicates whether a lambda expression is a value.
+   * Under the call-by-value strategy, we do not try to reduce a value.
+   */
+  lazy val isValue: LambdaExpr ==> Boolean =
+    attr {
+      case _: Var | _: Abs => true
+      case App(_: Var, p) => p->isValue
+      case _ => false
+    }
+
 
   def rename(exp: LambdaExpr, oldname: String, newname: String): LambdaExpr = exp match {
     case Var(x) if x == oldname => Var(newname)

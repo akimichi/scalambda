@@ -31,19 +31,8 @@ object CallByValueStrategy extends InterpretationStrategy {
   val name = "call-by-value"
 
   /**
-   * Attribute isValue indicates whether a lambda expression is a value.
-   * Under the call-by-value strategy, we do not try to reduce a value.
-   */
-  lazy val isValue: LambdaExpr ==> Boolean =
-    attr {
-      case _: Var | _: Abs => true
-      case App(_: Var, p) => p->isValue
-      case _ => false
-    }
-
-  /**
    *      t1 -> t1'
-   *   ---------------   (oncetd)
+   *   ---------------
    *   t1 t2 -> t1' t2
    *   
    *      t2 -> t2'
