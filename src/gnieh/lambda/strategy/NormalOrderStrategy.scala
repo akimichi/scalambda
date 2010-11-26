@@ -31,7 +31,20 @@ object NormalOrderStrategy extends InterpretationStrategy {
   val name = "normal order"
   
   /**
-   * Simply reduce the leftmost, outermost lambda term
+   *      t1 -> t1'
+   *   ---------------
+   *   t1 t2 -> t1' t2
+   *   
+   *      t2 -> t2'
+   *   ---------------
+   *   v1 t2 -> v1 t2'
+   *   
+   *   -------------------
+   *   (\x.t) v -> [x->v]t
+   *   
+   *      t -> t'
+   *   -------------
+   *   \x.t -> \x.t'
    */
   lazy val stepStrategy: Strategy = oncetd(step) <* substitute
   
