@@ -49,7 +49,7 @@ final case class Var(name: String) extends LambdaExpr {
 final case class Abs(v: Var, body: LambdaExpr) extends LambdaExpr {
   def toString(alias: Boolean): String = environment.getName(this) match {
     case Some(name) if alias => name
-    case _ => "λ" + v.toString(false) + "." + body.toString(alias)
+    case _ => "\u03BB" + v.toString(false) + "." + body.toString(alias)
   }
 }
 
