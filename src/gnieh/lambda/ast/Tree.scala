@@ -61,11 +61,13 @@ final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
     case Some(name) if alias => name
     case _ =>
       val fun = f match {
-        case _: Abs if !environment.containsExpr(f) || !alias => "(" + f.toString(alias) + ")"
+        case _: App | _: Abs 
+            if !environment.containsExpr(f) || !alias => "(" + f.toString(alias) + ")"
         case _ => f.toString(alias)
       }
       val par = p match {
-        case _: App | _: Abs if !environment.containsExpr(p) || !alias => "(" + p.toString(alias) + ")"
+        case _: App | _: Abs 
+            if !environment.containsExpr(p) || !alias => "(" + p.toString(alias) + ")"
         case _ => p.toString(alias)
       }
       fun + " " + par
@@ -76,7 +78,8 @@ final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
  * Substitution [v->by]expr
  */
 final case class Subst(expr: LambdaExpr, v: String, by: LambdaExpr) extends LambdaExpr {
-  def toString(alias: Boolean): String = throw new UnsupportedOperationException("toString(Boolean)")
+  def toString(alias: Boolean): String =
+    throw new UnsupportedOperationException("toString(Boolean)")
 }
 
 /**
@@ -105,3 +108,4 @@ case object Env extends Command
 final case class LoadLib(name: String) extends Command
 final case class SaveLib(name: String) extends Command
 final case class RemoveEnv(names: List[String]) extends Command
+final case class DeBruijnCommand(expr: LambdaExpr) extends Command

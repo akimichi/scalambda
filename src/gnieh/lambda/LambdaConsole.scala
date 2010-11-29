@@ -43,7 +43,7 @@ object LambdaConsole {
       new SimpleCompletor(
         Array(":help", ":quit", ":normal-order", ":call-by-name",
           ":call-by-value", ":show-steps", ":hide-steps", ":env",
-          ":show-aliases", ":hide-aliases", ":save")),
+          ":show-aliases", ":hide-aliases", ":save", ":de-bruijn")),
       new ArgumentCompletor(Array[Completor](
         new SimpleCompletor(":rm"),
         EnvCompletor)),

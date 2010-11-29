@@ -39,12 +39,13 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    *        | `:show-aliases'
    *        | `:hide-aliases'
    *        | `:rm' Ident+
+   *        | `:de-bruijn' Expr
    *        | Assign
    *        | Expr
    */
   lazy val line: Parser[Node] =
     quit | help | normalOrder | callByName | callByValue | showSteps | hideSteps | showAliases | 
-    hideAliases | env | load | save | assign | rm | expr
+    hideAliases | env | load | save | assign | rm | deBruijn | expr
 
   /**
    * Expr ::= Expr Factor
@@ -118,6 +119,8 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
 
   lazy val env: Parser[Command] = ":env" ^^ { _ => Env }
 
+  lazy val deBruijn: Parser[DeBruijnCommand] = ":de-bruijn"~>expr ^^ DeBruijnCommand
+  
   private def parsedIdent(id: String): LambdaExpr =
     environment.getExpr(id) match {
       case Some(expr) => expr

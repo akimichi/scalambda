@@ -73,6 +73,10 @@ type :help for help and :quit to quit""")
     case HideSteps => showReductionSteps = false
     case ShowAliases => aliasesEnabled = true
     case HideAliases => aliasesEnabled = false
+    // show the de Bruijn representation of a term
+    case DeBruijnCommand(term) =>
+      import analysis.DeBruijn._
+      println(term->deBruijnTerm(BaseNamingContext))
     // show current environment
     case Env =>
       for((name, expr) <- environment.definitions)
@@ -96,7 +100,8 @@ type :help for help and :quit to quit""")
  :load <name>        Load the definitions from the given library to environment
  :save <name>        Save the current environment to the given library
  :show-aliases       Display alias when an expression is known as an alias (default)
- :hide-aliases       Do not display aliases""")
+ :hide-aliases       Do not display aliases
+ :de-bruijn <expr>   Show the De Bruijn representation of the given lambda term""")
     case LoadLib(name) =>
       loadLib(name)
     case SaveLib(name) =>
