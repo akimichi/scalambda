@@ -27,6 +27,7 @@ import ast._
 import strategy._
 import util.Arm._
 import util.environment
+import analysis.DeBruijn._
 
 import org.kiama.util.{ ParsingREPL, JLineConsole }
 import JLineConsole._
@@ -62,7 +63,7 @@ type :help for help and :quit to quit""")
       println(name + " added to the environment.")
     // evaluate expression
     case le: LambdaExpr =>
-      println(le.toString(!environment.containsExpr(le) && aliasesEnabled))
+      println("   " +le.toString(!environment.containsExpr(le) && aliasesEnabled))
       steps(le)
     // switch strategy
     case NormalOrder => switchTo(NormalOrderStrategy)
@@ -75,7 +76,6 @@ type :help for help and :quit to quit""")
     case HideAliases => aliasesEnabled = false
     // show the de Bruijn representation of a term
     case DeBruijnCommand(term) =>
-      import analysis.DeBruijn._
       println(term->deBruijnTerm(BaseNamingContext))
     // show current environment
     case Env =>
@@ -173,7 +173,7 @@ type :help for help and :quit to quit""")
     while (true) {
       last = current
       strategy(current) match {
-        case Some(e) if last == e =>
+        case Some(e) if last ~= e =>
           println("The term '" + last.toString(false) + "' diverges using the " + strategy.name + " strategy.")
           return
         case Some(e) =>

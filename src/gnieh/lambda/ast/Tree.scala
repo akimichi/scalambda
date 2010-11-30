@@ -34,6 +34,15 @@ sealed trait LambdaExpr extends Node with Attributable {
    * @param alias whether aliases should be displayed
    */
   def toString(alias: Boolean): String
+  
+  import analysis.DeBruijn._
+  
+  /**
+   * Equals modulo renaming
+   */
+   def ~=(other: LambdaExpr) = 
+      this->deBruijnTerm(BaseNamingContext) == other->deBruijnTerm(BaseNamingContext)
+  
 }
 
 /**

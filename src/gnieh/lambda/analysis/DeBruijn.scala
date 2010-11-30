@@ -85,6 +85,14 @@ object DeBruijn {
     
   }
 
+  /**
+   * Computes the corresponding De Bruijn term to the given standard lambda term.
+   * This attributes is parameterized with the current naming context.
+   * Typically a call looks like this:
+   * <pre>
+   * term->deBruijnTerm(BaseNamingContext)
+   * </pre>
+   */
   lazy val deBruijnTerm: NamingContext => LambdaExpr ==> DeBruijnExpr =
     paramAttr { 
       context => {
