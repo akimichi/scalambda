@@ -56,23 +56,28 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
    */
   lazy val expr: PackratParser[LambdaExpr] =
     expr ~ factor ^^ { case f ~ p => App(f, p) } |
-      (("\\" | "\u03BB") ~> variable) ~ ("." ~> expr) ^^ { case v ~ b => Abs(v, b) } |
-      factor |
-      failure("expression expected")
+    lambda |
+    factor |
+    failure("expression expected")
 
   /**
    * Factor ::= Ident
    *          | Variable
    *          | `(' Expr `)'
    */
-  lazy val factor: PackratParser[LambdaExpr] =
-    ident ^^ { name => parsedIdent(name) } |
-      variable | "(" ~> expr <~ ")"
+  lazy val factor: PackratParser[LambdaExpr] = (
+      ident ^^ { name => parsedIdent(name) }
+    | variable
+    | "(" ~> expr <~ ")"
+  )
 
+  lazy val lambda: Parser[Abs] =
+    (("\\" | "\u03BB") ~> variable) ~ ("." ~> expr) ^^ { case v ~ b => Abs(v, b) }
+      
   /**
    * Variable ::= char
    */
-  lazy val variable: Parser[Var] =
+  def variable: Parser[Var] =
     "[a-z]".r ^^ Var
 
   /**
@@ -99,25 +104,25 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
 
   lazy val save: Parser[SaveLib] = ":save" ~> path ^^ SaveLib
 
-  lazy val quit: Parser[Command] = ":quit" ^^ { _ => Quit }
+  lazy val quit: Parser[Command] = ":quit" ^^^ Quit
 
-  lazy val help: Parser[Command] = ":help" ^^ { _ => Help }
+  lazy val help: Parser[Command] = ":help" ^^^ Help
 
-  lazy val normalOrder: Parser[Command] = ":normal-order" ^^ { _ => NormalOrder }
+  lazy val normalOrder: Parser[Command] = ":normal-order" ^^^ NormalOrder
   
-  lazy val callByName: Parser[Command] = ":call-by-name" ^^ { _ => CallByName }
+  lazy val callByName: Parser[Command] = ":call-by-name" ^^^ CallByName
   
-  lazy val callByValue: Parser[Command] = ":call-by-value" ^^ { _ => CallByValue }
+  lazy val callByValue: Parser[Command] = ":call-by-value" ^^^ CallByValue
 
-  lazy val showSteps: Parser[Command] = ":show-steps" ^^ { _ => ShowSteps }
+  lazy val showSteps: Parser[Command] = ":show-steps" ^^^ ShowSteps
 
-  lazy val hideSteps: Parser[Command] = ":hide-steps" ^^ { _ => HideSteps }
+  lazy val hideSteps: Parser[Command] = ":hide-steps" ^^^ HideSteps
 
-  lazy val showAliases: Parser[Command] = ":show-aliases" ^^ { _ => ShowAliases }
+  lazy val showAliases: Parser[Command] = ":show-aliases" ^^^ ShowAliases
 
-  lazy val hideAliases: Parser[Command] = ":hide-aliases" ^^ { _ => HideAliases }
+  lazy val hideAliases: Parser[Command] = ":hide-aliases" ^^^ HideAliases
 
-  lazy val env: Parser[Command] = ":env" ^^ { _ => Env }
+  lazy val env: Parser[Command] = ":env" ^^^ Env
 
   lazy val deBruijn: Parser[DeBruijnCommand] = ":de-bruijn"~>expr ^^ DeBruijnCommand
   

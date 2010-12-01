@@ -40,8 +40,8 @@ sealed trait LambdaExpr extends Node with Attributable {
   /**
    * Equals modulo renaming
    */
-   def ~=(other: LambdaExpr) = 
-      this->deBruijnTerm(BaseNamingContext) == other->deBruijnTerm(BaseNamingContext)
+   def ~=(that: LambdaExpr) = 
+      this->deBruijnTerm(BaseNamingContext) == that->deBruijnTerm(BaseNamingContext)
   
 }
 
