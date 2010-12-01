@@ -77,7 +77,8 @@ trait LambdaParsers extends RegexParsers with PackratParsers
     (("\\" | "\u03BB") ~> variable) ~ ("." ~> expr) ^^ { case v ~ b => Abs(v, b) }
       
   lazy val variable: Parser[Var] = "[a-z]".r~opt(":"~>tpe) ^^ {
-    case name~tpe => Var(name, tpe)
+    case name~Some(tpe) => Var(name, tpe)
+    case name~None => Var(name)
   }
   
   lazy val tpe: PackratParser[Type] = 

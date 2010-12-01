@@ -16,7 +16,7 @@
 */
 package gnieh.lambda.types
 
-trait Type
+sealed trait Type
 
 /**
  * 
@@ -42,4 +42,30 @@ case object Nat extends Type
  * @author Lucas Satabin
  *
  */
-final case class Function(tp: Type, tr: Type) extends Type 
+final case class Function(tp: Type, tr: Type) extends Type {
+  override def toString = tp + " \u2192 " + tr
+}
+
+/**
+ * Unknown type.
+ * 
+ * @author Lucas Satabin
+ *
+ */
+case object UnknownType extends Type {
+  override def toString = "?"
+}
+
+/**
+ * Unexpected type.
+ * 
+ * @author Lucas Satabin
+ *
+ */
+final case class ErrorType(expected: Type, found: Type) extends Type {
+  override def toString = "Expected type: " + expected + ". Found type: " + found
+}
+
+case object WildcardType extends Type {
+  override def toString = "_"
+}

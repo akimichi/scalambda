@@ -53,7 +53,7 @@ sealed trait TypedExpr extends LambdaExpr {
 /**
  * A variable simply consists of a name
  */
-final case class Var(name: String, tpe: Option[Type]) extends LambdaExpr {
+final case class Var(name: String, tpe: Type = UnknownType) extends LambdaExpr {
   def toString(alias: Boolean): String = name
 }
 
@@ -86,6 +86,14 @@ final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
       }
       fun + " " + par
   }
+}
+
+final case class True extends LambdaExpr {
+  def toString(alias: Boolean) = "true"
+}
+
+final case class False extends LambdaExpr {
+  def toString(alias: Boolean) = "false"
 }
 
 /**
