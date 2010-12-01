@@ -96,27 +96,12 @@ object DeBruijn {
   lazy val deBruijnTerm: NamingContext => LambdaExpr ==> DeBruijnExpr =
     paramAttr { 
       context => {
-        case Var(x) => DeBruijnIndex(context.getIndex(x))
-        case Abs(Var(x), b) =>
+        case Var(x, _) => DeBruijnIndex(context.getIndex(x))
+        case Abs(Var(x, _), b) =>
           val newContext = new AbsNamingContext(x, context)
           DeBruijnAbs(b->deBruijnTerm(newContext))
         case App(f, p) =>
           DeBruijnApp(f->deBruijnTerm(context), p->deBruijnTerm(context))
-      }
-    }
-  
-  lazy val normalTerm: NamingContext => DeBruijnExpr ==> LambdaExpr =
-    paramAttr { 
-      context => {
-        case DeBruijnIndex(idx) => context.getName(idx) match {
-          case Some(name) => Var(name)
-          case None => LambdaError("index " + idx + " not in the naming context")
-        }
-        case DeBruijnAbs(b) =>
-          
-          null
-        case DeBruijnApp(f, p) =>
-          null
       }
     }
     

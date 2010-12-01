@@ -14,38 +14,32 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package gnieh.lambda
-package strategy
+package gnieh.lambda.types
 
-import ast._
-
-import org.kiama.attribution.Attribution._
-import org.kiama.rewriting.Rewriter._
+trait Type
 
 /**
+ * 
+ * Type of booleans.
+ * 
  * @author Lucas Satabin
  *
  */
-object CallByValueStrategy extends InterpretationStrategy {
+case object Bool extends Type
 
-  val name = "call-by-value"
+/**
+ * 
+ * Type of natural numbers.
+ * 
+ * @author Lucas Satabin
+ *
+ */
+case object Nat extends Type
 
-  /**
-   *      t1 -> t1'
-   *   ---------------
-   *   t1 t2 -> t1' t2
-   *   
-   *      t2 -> t2'
-   *   ---------------
-   *   v1 t2 -> v1 t2'
-   *   
-   *   -------------------
-   *   (\x.t) v -> [x->v]t
-   */
-  lazy val byvalue = rule {
-    case App(Abs(Var(x, _), body), v) if v->isValue => Subst(body, x, v)
-  }
-
-  lazy val stepStrategy = notinlambda(byvalue) <* substitute
-
-}
+/**
+ * Type of functions.
+ * 
+ * @author Lucas Satabin
+ *
+ */
+final case class Function(tp: Type, tr: Type) extends Type 

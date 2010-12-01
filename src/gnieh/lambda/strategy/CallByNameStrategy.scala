@@ -41,7 +41,7 @@ object CallByNameStrategy extends InterpretationStrategy {
    *   (\x.t1) t2 -> [x->t2]t1
    */
   lazy val byname: Strategy = strategyf {
-    case App(Abs(Var(x), body), v) => Some(Subst(body, x, v))
+    case App(Abs(Var(x, _), body), v) => Some(Subst(body, x, v))
     case App(t, _) if t->isValue => None
     case t: LambdaExpr if t->isValue => None
     case t => one(byname)(t) 

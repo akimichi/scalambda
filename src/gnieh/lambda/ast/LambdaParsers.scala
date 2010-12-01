@@ -22,8 +22,10 @@ import scala.util.parsing.combinator.{ RegexParsers, PackratParsers }
 import java.io.File
 
 import util.environment
+import types._
 
-trait LambdaParsers extends RegexParsers with PackratParsers {
+trait LambdaParsers extends RegexParsers with PackratParsers
+                    with CommandParsers {
 
   /** 
    * Line ::= `:quit'
@@ -74,58 +76,20 @@ trait LambdaParsers extends RegexParsers with PackratParsers {
   lazy val lambda: Parser[Abs] =
     (("\\" | "\u03BB") ~> variable) ~ ("." ~> expr) ^^ { case v ~ b => Abs(v, b) }
       
-  /**
-   * Variable ::= char
-   */
-  def variable: Parser[Var] =
-    "[a-z]".r ^^ Var
-
-  /**
-   * Assign ::= Ident `=' Expr
-   */
-  lazy val assign: Parser[Assign] =
-    (ident <~ "=") ~ expr ^^ { case name ~ expr => Assign(name, expr) }
-
+  lazy val variable: Parser[Var] = "[a-z]".r~opt(":"~>tpe) ^^ {
+    case name~tpe => Var(name, tpe)
+  }
+  
+  lazy val tpe: PackratParser[Type] = 
+    "Bool" ^^^ Bool |
+    "Nat" ^^^ Nat |
+    (tpe<~("->" | "\u2192"))~tpe ^^ {case t1~t2 => Function(t1,t2)}
+    
   /**
    * Ident ::= [A-Z][a-z0-9_]*
    */
   lazy val ident = "[A-Z][A-Za-z0-9_]*".r
-
-  lazy val file: Parser[List[Assign]] = opt("#.*\n".r) ~> rep(assign <~ ";")
-
-  /**
-   * Path ::= [A-Za-z0-9_\-]+
-   */
-  lazy val path: Parser[String] = "[A-Za-z0-9_\\-]+(\\.lbd)?".r
-  
-  lazy val rm: Parser[RemoveEnv] = ":rm"~>rep1(ident) ^^ RemoveEnv
-
-  lazy val load: Parser[LoadLib] = ":load" ~> path ^^ LoadLib
-
-  lazy val save: Parser[SaveLib] = ":save" ~> path ^^ SaveLib
-
-  lazy val quit: Parser[Command] = ":quit" ^^^ Quit
-
-  lazy val help: Parser[Command] = ":help" ^^^ Help
-
-  lazy val normalOrder: Parser[Command] = ":normal-order" ^^^ NormalOrder
-  
-  lazy val callByName: Parser[Command] = ":call-by-name" ^^^ CallByName
-  
-  lazy val callByValue: Parser[Command] = ":call-by-value" ^^^ CallByValue
-
-  lazy val showSteps: Parser[Command] = ":show-steps" ^^^ ShowSteps
-
-  lazy val hideSteps: Parser[Command] = ":hide-steps" ^^^ HideSteps
-
-  lazy val showAliases: Parser[Command] = ":show-aliases" ^^^ ShowAliases
-
-  lazy val hideAliases: Parser[Command] = ":hide-aliases" ^^^ HideAliases
-
-  lazy val env: Parser[Command] = ":env" ^^^ Env
-
-  lazy val deBruijn: Parser[DeBruijnCommand] = ":de-bruijn"~>expr ^^ DeBruijnCommand
-  
+    
   private def parsedIdent(id: String): LambdaExpr =
     environment.getExpr(id) match {
       case Some(expr) => expr

@@ -18,6 +18,7 @@ package gnieh.lambda
 package ast
 
 import util.environment
+import types._
 
 import org.kiama.attribution.Attributable
 
@@ -45,10 +46,14 @@ sealed trait LambdaExpr extends Node with Attributable {
   
 }
 
+sealed trait TypedExpr extends LambdaExpr {
+  val tpe: Type
+}
+
 /**
  * A variable simply consists of a name
  */
-final case class Var(name: String) extends LambdaExpr {
+final case class Var(name: String, tpe: Option[Type]) extends LambdaExpr {
   def toString(alias: Boolean): String = name
 }
 
