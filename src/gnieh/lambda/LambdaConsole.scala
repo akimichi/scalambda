@@ -43,7 +43,8 @@ object LambdaConsole {
       new SimpleCompletor(
         Array(":help", ":quit", ":normal-order", ":call-by-name",
           ":call-by-value", ":show-steps", ":hide-steps", ":env",
-          ":show-aliases", ":hide-aliases", ":save", ":de-bruijn")),
+          ":show-aliases", ":hide-aliases", ":save", ":de-bruijn",
+          ":enable-typing", ":disable-typing")),
       new ArgumentCompletor(Array[Completor](
         new SimpleCompletor(":rm"),
         EnvCompletor)),
@@ -68,13 +69,6 @@ object LambdaConsole {
       
       super.complete(translated, cursor, candidates) - 5
     }
-
-//    override def matchFiles(buffer: String, translated: String, entries: Array[java.io.File], candidates: java.util.List[_]) = {
-//      
-//      super.matchFiles(buffer, translated, entries, candidates)
-//    }
-    
   }
-  
 
 }

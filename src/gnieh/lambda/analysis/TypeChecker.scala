@@ -53,12 +53,18 @@ object TypeChecker {
           case _ => UnknownType
         }
         case Var(_, t) => t
-        case Abs(v, b) => Function(v->tpe(Map()), b->tpe(table + (v.name -> v.tpe)))
-        case App(f, p) =>
+        case Abs(v, b) => 
+          val vtpe = v->tpe(Map())
+          b->tpe(table + (v.name -> vtpe)) match {
+            case err: ErrorType => err
+            case btpe => Function(vtpe, btpe)
+          }
+        case term@App(f, p) =>
           f->tpe(table) match {
             case Function(pt, rt) if(pt == p->tpe(table)) => rt
-            case Function(pt, _) => ErrorType(pt, p->tpe(table))
-            case t => ErrorType(Function(p->tpe(table), WildcardType), t)
+            case Function(pt, _) => ErrorType(term, pt, p->tpe(table))
+            case err: ErrorType => err
+            case t => ErrorType(term, Function(p->tpe(table), WildcardType), t)
           }
       }
     }

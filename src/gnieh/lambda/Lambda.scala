@@ -28,6 +28,8 @@ import strategy._
 import util.Arm._
 import util.environment
 import analysis.DeBruijn._
+import analysis.{ TypeChecker => checker }
+import types.ErrorType
 
 import org.kiama.util.{ ParsingREPL, JLineConsole }
 import JLineConsole._
@@ -41,6 +43,8 @@ object Lambda extends ParsingREPL[Node] with LambdaParsers {
   var libPath = new File(Properties.propOrElse("defs.path", ".")).getCanonicalFile
 
   var aliasesEnabled = true
+
+  var checkTypes = false
 
   override def setup(args: Array[String]) = {
     // load the libraries passed to the command line
@@ -63,8 +67,20 @@ type :help for help and :quit to quit""")
       println(name + " added to the environment.")
     // evaluate expression
     case le: LambdaExpr =>
-      println("   " +le.toString(!environment.containsExpr(le) && aliasesEnabled))
-      steps(le)
+      println("   " + le.toString(!environment.containsExpr(le) && aliasesEnabled))
+      var ok =
+        if (checkTypes) {
+          le -> checker.tpe(Map()) match {
+            case err: ErrorType =>
+              println(err)
+              false
+            case _ => true
+          }
+        } else {
+          true
+        }
+      if(ok)
+        steps(le)
     // switch strategy
     case NormalOrder => switchTo(NormalOrderStrategy)
     case CallByName => switchTo(CallByNameStrategy)
@@ -74,34 +90,25 @@ type :help for help and :quit to quit""")
     case HideSteps => showReductionSteps = false
     case ShowAliases => aliasesEnabled = true
     case HideAliases => aliasesEnabled = false
+    // typing enabling/disabling
+    case EnableTyping => checkTypes = true
+    case DisableTyping => checkTypes = false
     // show the de Bruijn representation of a term
     case DeBruijnCommand(term) =>
-      println(term->deBruijnTerm(BaseNamingContext))
+      println(term -> deBruijnTerm(BaseNamingContext))
     // show current environment
     case Env =>
-      for((name, expr) <- environment.definitions)
+      for ((name, expr) <- environment.definitions)
         println(name + " = " + expr.toString(false))
     case RemoveEnv(names) =>
-      for(name <- names)
+      for (name <- names)
         environment.unbind(name)
       println(names.mkString("[", ", ", "]") + " removed from the environment")
     // quit
     case Quit => exit
     // help
     case Help =>
-      println("""Available commands:
- :help               Display this help
- :quit               Quit the \u03BB Interpreter
- :normal-order       Use normal order strategy to reduce the terms (default)
- :show-steps         Show the steps when reducing (enabled by default)
- :hide-steps         Do not show steps when reducing
- :env                Show the current environment 
- :rm <n1> [<n2> ...] Removes the given names from the environment
- :load <name>        Load the definitions from the given library to environment
- :save <name>        Save the current environment to the given library
- :show-aliases       Display alias when an expression is known as an alias (default)
- :hide-aliases       Do not display aliases
- :de-bruijn <expr>   Show the De Bruijn representation of the given lambda term""")
+      printHelp
     case LoadLib(name) =>
       loadLib(name)
     case SaveLib(name) =>
@@ -114,12 +121,12 @@ type :help for help and :quit to quit""")
    * Loads the library by its name and add the definitions in it to the environment.
    */
   private def loadLib(name: String) {
-    val libFile = 
-      if(name.endsWith(".lbd"))
+    val libFile =
+      if (name.endsWith(".lbd"))
         new File(libPath, name)
       else
         new File(libPath, name + ".lbd")
-    
+
     using(Source.fromFile(libFile, "UTF-8")) { source =>
       parseAll(file, source.bufferedReader) match {
         case Success(assigns, _) =>
@@ -187,6 +194,24 @@ type :help for help and :quit to quit""")
           return
       }
     }
+  }
+
+  private def printHelp {
+    println("""Available commands:
+ :help               Display this help
+ :quit               Quit the \u03BB Interpreter
+ :normal-order       Use normal order strategy to reduce the terms (default)
+ :show-steps         Show the steps when reducing (enabled by default)
+ :hide-steps         Do not show steps when reducing
+ :env                Show the current environment 
+ :rm <n1> [<n2> ...] Removes the given names from the environment
+ :load <name>        Load the definitions from the given library to environment
+ :save <name>        Save the current environment to the given library
+ :show-aliases       Display alias when an expression is known as an alias (default)
+ :hide-aliases       Do not display aliases
+ :de-bruijn <expr>   Show the De Bruijn representation of the given lambda term
+ :enable-typing      Enable type checking of lambda terms
+ :disable-typing     Disable type checking of lambda terms (default)""")
   }
 
 }

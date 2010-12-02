@@ -14,7 +14,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package gnieh.lambda.types
+package gnieh.lambda
+package types
+
+import ast.LambdaExpr
 
 sealed trait Type
 
@@ -62,8 +65,11 @@ case object UnknownType extends Type {
  * @author Lucas Satabin
  *
  */
-final case class ErrorType(expected: Type, found: Type) extends Type {
-  override def toString = "Expected type: " + expected + ". Found type: " + found
+final case class ErrorType(term: LambdaExpr, expected: Type, found: Type) extends Type {
+  override def toString = 
+    "Error while typing " + term.toString(false) +
+      "\n\tExpected type: " + expected +
+      "\n\tFound type:    " + found
 }
 
 case object WildcardType extends Type {

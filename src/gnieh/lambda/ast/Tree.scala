@@ -75,7 +75,7 @@ final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
     case Some(name) if alias => name
     case _ =>
       val fun = f match {
-        case _: App | _: Abs 
+        case _: Abs 
             if !environment.containsExpr(f) || !alias => "(" + f.toString(alias) + ")"
         case _ => f.toString(alias)
       }
@@ -88,12 +88,16 @@ final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
   }
 }
 
-final case class True extends LambdaExpr {
+case object True extends LambdaExpr {
   def toString(alias: Boolean) = "true"
 }
 
-final case class False extends LambdaExpr {
+case object False extends LambdaExpr {
   def toString(alias: Boolean) = "false"
+}
+
+final case class Number(value: Int) extends LambdaExpr {
+  def toString(alias: Boolean) = value.toString
 }
 
 /**
@@ -131,3 +135,5 @@ final case class LoadLib(name: String) extends Command
 final case class SaveLib(name: String) extends Command
 final case class RemoveEnv(names: List[String]) extends Command
 final case class DeBruijnCommand(expr: LambdaExpr) extends Command
+case object EnableTyping extends Command
+case object DisableTyping extends Command

@@ -66,5 +66,9 @@ trait CommandParsers extends RegexParsers {
   lazy val env: Parser[Command] = ":env" ^^^ Env
 
   lazy val deBruijn: Parser[DeBruijnCommand] = ":de-bruijn"~>expr ^^ DeBruijnCommand
+  
+  lazy val enableTyping: Parser[Command] = ":enable-typing" ^^^ EnableTyping
+  
+  lazy val disableTyping: Parser[Command] = ":disable-typing" ^^^ DisableTyping
 
 }

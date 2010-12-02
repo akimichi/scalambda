@@ -42,12 +42,30 @@ trait LambdaParsers extends RegexParsers with PackratParsers
    *        | `:hide-aliases'
    *        | `:rm' Ident+
    *        | `:de-bruijn' Expr
+   *        | `:enable-typing'
+   *        | `:disable-typing'
    *        | Assign
    *        | Expr
    */
   lazy val line: Parser[Node] =
-    quit | help | normalOrder | callByName | callByValue | showSteps | hideSteps | showAliases | 
-    hideAliases | env | load | save | assign | rm | deBruijn | expr
+    quit |
+    help |
+    normalOrder |
+    callByName |
+    callByValue |
+    showSteps |
+    hideSteps |
+    showAliases | 
+    hideAliases | 
+    env |
+    load |
+    save |
+    rm |
+    deBruijn |
+    enableTyping |
+    disableTyping |
+    assign |
+    expr
 
   /**
    * Expr ::= Expr Factor
@@ -81,10 +99,11 @@ trait LambdaParsers extends RegexParsers with PackratParsers
     case name~None => Var(name)
   }
   
-  lazy val tpe: PackratParser[Type] = 
+  lazy val tpe: PackratParser[Type] =
+    (tpe<~("->" | "\u2192"))~tpe ^^ {case t1~t2 => Function(t1,t2)} |
     "Bool" ^^^ Bool |
     "Nat" ^^^ Nat |
-    (tpe<~("->" | "\u2192"))~tpe ^^ {case t1~t2 => Function(t1,t2)}
+    "("~>tpe<~")"
     
   /**
    * Ident ::= [A-Z][a-z0-9_]*
