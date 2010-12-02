@@ -8,7 +8,7 @@ It currently supports three different strategies:
  - call-by-name strategy which does not allow reduction inside a lambda abstraction
  - call-by-value strategy which only reduces the left part of an application when the right part is a value (that is a term that cannot be further reduced)
 
-scalambda is designed after the presentation of the lambda calculus in "Types and Programming Languages" by Benjamin C. Pierce and is first a personal project used as companion to the book. At term it will contain more concepts from the book, such as the possibility to enable typed lambda calculus.
+scalambda is designed after the presentation of the lambda calculus in "Types and Programming Languages" by Benjamin C. Pierce and is primarily a personal project used as companion to the book. At term it will contain more concepts from the book, such as the possibility to enable typed lambda calculus.
 
 Usage
 =====
@@ -17,11 +17,11 @@ $ scalambda [file1 [file2 ...]]
 
 Starts scalambda. All the file passed in command line are processed as library files and scalambda will try to load the definition to the environment.
 
-once scalambda is started, you will get a prompt
+Once scalambda is started, you will get a prompt
 
 λ > 
 
-just type `:help' to get some help.
+Simply type `:help' to get some help.
 
 You can enter any lambda expression that you want to evaluate under the current strategy like this:
 
