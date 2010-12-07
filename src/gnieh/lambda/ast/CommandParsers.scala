@@ -70,5 +70,9 @@ trait CommandParsers extends RegexParsers {
   lazy val enableTyping: Parser[Command] = ":enable-typing" ^^^ EnableTyping
   
   lazy val disableTyping: Parser[Command] = ":disable-typing" ^^^ DisableTyping
+  
+  lazy val showType: Parser[Command] = ":type"~>expr ^^ ShowType
+  
+  lazy val derivation: Parser[Deriv] = ":derivation"~>expr ^^ Deriv
 
 }

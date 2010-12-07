@@ -44,7 +44,7 @@ object LambdaConsole {
         Array(":help", ":quit", ":normal-order", ":call-by-name",
           ":call-by-value", ":show-steps", ":hide-steps", ":env",
           ":show-aliases", ":hide-aliases", ":save", ":de-bruijn",
-          ":enable-typing", ":disable-typing")),
+          ":enable-typing", ":disable-typing", ":type", ":derivation")),
       new ArgumentCompletor(Array[Completor](
         new SimpleCompletor(":rm"),
         EnvCompletor)),

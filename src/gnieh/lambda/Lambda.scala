@@ -29,6 +29,7 @@ import util.Arm._
 import util.environment
 import analysis.DeBruijn._
 import analysis.{ TypeChecker => checker }
+import analysis.{ BasicChecks => basic }
 import types.ErrorType
 
 import org.kiama.util.{ ParsingREPL, JLineConsole }
@@ -68,19 +69,21 @@ type :help for help and :quit to quit""")
     // evaluate expression
     case le: LambdaExpr =>
       println("   " + le.toString(!environment.containsExpr(le) && aliasesEnabled))
-      var ok =
-        if (checkTypes) {
-          le -> checker.tpe(Map()) match {
-            case err: ErrorType =>
-              println(err)
-              false
-            case _ => true
+      if (le -> basic.ok) {
+        var ok =
+          if (checkTypes) {
+            le -> checker.tpe(Map()) match {
+              case err: ErrorType =>
+                println(err)
+                false
+              case _ => true
+            }
+          } else {
+            true
           }
-        } else {
-          true
-        }
-      if(ok)
-        steps(le)
+        if (ok)
+          steps(le)
+      }
     // switch strategy
     case NormalOrder => switchTo(NormalOrderStrategy)
     case CallByName => switchTo(CallByNameStrategy)
@@ -93,6 +96,11 @@ type :help for help and :quit to quit""")
     // typing enabling/disabling
     case EnableTyping => checkTypes = true
     case DisableTyping => checkTypes = false
+    // compute and show the type
+    case ShowType(expr) =>
+      println(expr -> checker.tpe(Map()))
+    case Deriv(expr) =>
+      println(checker.derivation(Map(), expr).toLaTeX)
     // show the de Bruijn representation of a term
     case DeBruijnCommand(term) =>
       println(term -> deBruijnTerm(BaseNamingContext))
@@ -211,7 +219,9 @@ type :help for help and :quit to quit""")
  :hide-aliases       Do not display aliases
  :de-bruijn <expr>   Show the De Bruijn representation of the given lambda term
  :enable-typing      Enable type checking of lambda terms
- :disable-typing     Disable type checking of lambda terms (default)""")
+ :disable-typing     Disable type checking of lambda terms (default)
+ :type <expr>        Display the type of the expression
+ :derivation <expr>  Creates a LaTeX representation of the typing derivation tree""")
   }
 
 }

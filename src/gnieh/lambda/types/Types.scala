@@ -46,7 +46,14 @@ case object Nat extends Type
  *
  */
 final case class Function(tp: Type, tr: Type) extends Type {
-  override def toString = tp + " \u2192 " + tr
+  override def toString = {
+    val param =
+      tp match {
+        case _: Function => "(" + tp + ")"
+        case _ => tp
+      }
+    param + " \u2192 " + tr
+  }
 }
 
 /**

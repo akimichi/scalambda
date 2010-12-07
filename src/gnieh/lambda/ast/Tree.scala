@@ -35,15 +35,17 @@ sealed trait LambdaExpr extends Node with Attributable {
    * @param alias whether aliases should be displayed
    */
   def toString(alias: Boolean): String
-  
+
+  val toLaTeX: String
+
   import analysis.DeBruijn._
-  
+
   /**
    * Equals modulo renaming
    */
-   def ~=(that: LambdaExpr) = 
-      this->deBruijnTerm(BaseNamingContext) == that->deBruijnTerm(BaseNamingContext)
-  
+  def ~=(that: LambdaExpr) =
+    this -> deBruijnTerm(BaseNamingContext) == that -> deBruijnTerm(BaseNamingContext)
+
 }
 
 sealed trait TypedExpr extends LambdaExpr {
@@ -55,6 +57,7 @@ sealed trait TypedExpr extends LambdaExpr {
  */
 final case class Var(name: String, tpe: Type = UnknownType) extends LambdaExpr {
   def toString(alias: Boolean): String = name
+  lazy val toLaTeX = name
 }
 
 /**
@@ -65,39 +68,54 @@ final case class Abs(v: Var, body: LambdaExpr) extends LambdaExpr {
     case Some(name) if alias => name
     case _ => "\u03BB" + v.toString(false) + "." + body.toString(alias)
   }
+
+  lazy val toLaTeX = "\\lambda{}" + v.name + ":" + v.tpe + "." + body.toLaTeX
 }
 
 /**
  * Application of the form `f p'
  */
 final case class App(f: LambdaExpr, p: LambdaExpr) extends LambdaExpr {
+  
+  private def withParentheses(alias: Boolean, transf: LambdaExpr => String) = {
+    val fun = f match {
+        case _: Abs if !environment.containsExpr(f) || !alias => "(" + transf(f) + ")"
+        case _ => transf(f)
+      }
+      val par = p match {
+        case _: App | _: Abs if !environment.containsExpr(p) || !alias => "(" + transf(p) + ")"
+        case _ => transf(p)
+      }
+    (fun, par)
+  }
+  
   def toString(alias: Boolean): String = environment.getName(this) match {
     case Some(name) if alias => name
     case _ =>
-      val fun = f match {
-        case _: Abs 
-            if !environment.containsExpr(f) || !alias => "(" + f.toString(alias) + ")"
-        case _ => f.toString(alias)
-      }
-      val par = p match {
-        case _: App | _: Abs 
-            if !environment.containsExpr(p) || !alias => "(" + p.toString(alias) + ")"
-        case _ => p.toString(alias)
-      }
+      val (fun, par) = withParentheses(alias, _.toString(alias))
       fun + " " + par
   }
+
+  lazy val toLaTeX = {
+    val (fun, par) = withParentheses(false, _.toLaTeX)
+    fun + "\\;" + par
+  }
+
 }
 
 case object True extends LambdaExpr {
   def toString(alias: Boolean) = "true"
+  lazy val toLaTeX = "true"
 }
 
 case object False extends LambdaExpr {
   def toString(alias: Boolean) = "false"
+  lazy val toLaTeX = "false"
 }
 
 final case class Number(value: Int) extends LambdaExpr {
   def toString(alias: Boolean) = value.toString
+  lazy val toLaTeX = value.toString
 }
 
 /**
@@ -106,6 +124,8 @@ final case class Number(value: Int) extends LambdaExpr {
 final case class Subst(expr: LambdaExpr, v: String, by: LambdaExpr) extends LambdaExpr {
   def toString(alias: Boolean): String =
     throw new UnsupportedOperationException("toString(Boolean)")
+  lazy val toLaTeX =
+    throw new UnsupportedOperationException("toLaTeX")
 }
 
 /**
@@ -114,6 +134,7 @@ final case class Subst(expr: LambdaExpr, v: String, by: LambdaExpr) extends Lamb
 final case class LambdaError(message: String) extends LambdaExpr {
   override def toString = message
   def toString(alias: Boolean): String = toString
+  lazy val toLaTeX = message
 }
 
 final case class Assign(name: String, expr: LambdaExpr) extends Node {
@@ -137,3 +158,5 @@ final case class RemoveEnv(names: List[String]) extends Command
 final case class DeBruijnCommand(expr: LambdaExpr) extends Command
 case object EnableTyping extends Command
 case object DisableTyping extends Command
+final case class ShowType(expr: LambdaExpr) extends Command
+final case class Deriv(expr: LambdaExpr) extends Command

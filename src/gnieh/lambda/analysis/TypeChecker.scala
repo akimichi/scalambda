@@ -20,7 +20,7 @@ package analysis
 import ast._
 import types._
 import org.kiama.rewriting.Rewriter._
-import org.kiama.attribution.{Attributable, Attribution}
+import org.kiama.attribution.{ Attributable, Attribution }
 import Attribution._
 
 /**
@@ -31,11 +31,15 @@ import Attribution._
  *
  */
 object TypeChecker {
-  
+
   /**
-   *           x:T in G
-   *          ----------            (T-Var)
-   *          G |- x : T
+   *           true: Bool           (T-True)
+   *           
+   *           false:Bool           (T-False)
+   * 
+   *            x:T in G
+   *           ----------           (T-Var)
+   *           G |- x : T
    *  
    *         G,x:T |- t : T'
    *       -------------------      (T-Abs)
@@ -45,28 +49,55 @@ object TypeChecker {
    *  ----------------------------  (T-App)
    *         G |- t t' : T'
    */
-  lazy val tpe: Map[String,Type] => LambdaExpr ==> Type =
-    paramAttr {
-      table => {
-        case Var(x, UnknownType) => table.get(x) match {
-          case Some(t) => t
-          case _ => UnknownType
-        }
+  lazy val tpe: Map[String, Type] => LambdaExpr ==> Type =
+    paramAttr { table =>
+      {
+        case Var(x, UnknownType) =>
+          table.get(x) match {
+            case Some(t) => t
+            case _ => UnknownType
+          }
         case Var(_, t) => t
-        case Abs(v, b) => 
-          val vtpe = v->tpe(Map())
-          b->tpe(table + (v.name -> vtpe)) match {
+        case Abs(v, b) =>
+          val vtpe = v -> tpe(Map())
+          b -> tpe(table + (v.name -> vtpe)) match {
             case err: ErrorType => err
             case btpe => Function(vtpe, btpe)
           }
         case term@App(f, p) =>
-          f->tpe(table) match {
-            case Function(pt, rt) if(pt == p->tpe(table)) => rt
-            case Function(pt, _) => ErrorType(term, pt, p->tpe(table))
+          f -> tpe(table) match {
+            case Function(pt, rt) if (pt == p -> tpe(table)) => rt
+            case Function(pt, _) => ErrorType(term, pt, p -> tpe(table))
             case err: ErrorType => err
-            case t => ErrorType(term, Function(p->tpe(table), WildcardType), t)
+            case t => ErrorType(term, Function(p -> tpe(table), WildcardType), t)
           }
+        case True | False => Bool
       }
+    }
+
+  def derivation(table: Map[String, Type], term: LambdaExpr): Derivation =
+    term match {
+      case Var(x, t) if table.contains(x) =>
+        Derivation("T-Var", TypedExpr(table, term, table(x)), Nil)
+      case Abs(Var(x, t), body) =>
+        body -> tpe(table + (x -> t)) match {
+          case UnknownType | _: ErrorType =>
+            Derivation("T-Error", TypedExpr(table, term, UnknownType), Nil)
+          case tpe =>
+            Derivation("T-Abs", TypedExpr(table, term, tpe),
+              List(derivation(table + (x -> t), body)))
+        }
+
+      case App(f, p) =>
+        (f -> tpe(table), p -> tpe(table)) match {
+          case (Function(tfp, tfr), tp) if (tfp == tp) =>
+            Derivation("T-App", TypedExpr(table, term, tfr),
+                List(derivation(table, f), derivation(table, p)))
+          case _ => Derivation("T-Error", TypedExpr(table, term, UnknownType), Nil)
+        }
+      case True => Derivation("T-True", TypedExpr(Map(), term, Bool), Nil)
+      case False => Derivation("T-False", TypedExpr(Map(), term, Bool), Nil)
+      case _ => Derivation("T-Error", TypedExpr(table, term, UnknownType), Nil)
     }
 
 }

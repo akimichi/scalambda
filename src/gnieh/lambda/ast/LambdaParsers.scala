@@ -25,7 +25,7 @@ import util.environment
 import types._
 
 trait LambdaParsers extends RegexParsers with PackratParsers
-                    with CommandParsers {
+  with CommandParsers {
 
   /** 
    * Line ::= `:quit'
@@ -44,72 +44,103 @@ trait LambdaParsers extends RegexParsers with PackratParsers
    *        | `:de-bruijn' Expr
    *        | `:enable-typing'
    *        | `:disable-typing'
+   *        | `:type' Expr
+   *        | `:derivation' Expr
    *        | Assign
    *        | Expr
    */
   lazy val line: Parser[Node] =
     quit |
-    help |
-    normalOrder |
-    callByName |
-    callByValue |
-    showSteps |
-    hideSteps |
-    showAliases | 
-    hideAliases | 
-    env |
-    load |
-    save |
-    rm |
-    deBruijn |
-    enableTyping |
-    disableTyping |
-    assign |
-    expr
+      help |
+      normalOrder |
+      callByName |
+      callByValue |
+      showSteps |
+      hideSteps |
+      showAliases |
+      hideAliases |
+      env |
+      load |
+      save |
+      rm |
+      deBruijn |
+      enableTyping |
+      disableTyping |
+      showType |
+      derivation |
+      assign |
+      expr
 
   /**
    * Expr ::= Expr Factor
-   *        | `\u03BB' Variable `.' Expr
-   *        | `\' Variable `.' Expr
+   *        | Lambda
    *        | Factor
    *        | error
    */
   lazy val expr: PackratParser[LambdaExpr] =
     expr ~ factor ^^ { case f ~ p => App(f, p) } |
-    lambda |
-    factor |
-    failure("expression expected")
+      lambda |
+      factor |
+      failure("expression expected")
 
   /**
    * Factor ::= Ident
+   *          | Boolean
    *          | Variable
+   *          | Number
    *          | `(' Expr `)'
    */
-  lazy val factor: PackratParser[LambdaExpr] = (
-      ident ^^ { name => parsedIdent(name) }
+  lazy val factor: PackratParser[LambdaExpr] = (ident ^^ { name => parsedIdent(name) }
+    | boolean
     | variable
-    | "(" ~> expr <~ ")"
-  )
+    | number
+    | "(" ~> expr <~ ")")
 
+  /**
+   * Lambda ::= `\u03BB' Variable [`:' Type] `.' Expr
+   *          | `\' Variable [`:' Type] `.' Expr
+   */
   lazy val lambda: Parser[Abs] =
-    (("\\" | "\u03BB") ~> variable) ~ ("." ~> expr) ^^ { case v ~ b => Abs(v, b) }
-      
-  lazy val variable: Parser[Var] = "[a-z]".r~opt(":"~>tpe) ^^ {
-    case name~Some(tpe) => Var(name, tpe)
-    case name~None => Var(name)
-  }
-  
+    (("\\" | "\u03BB") ~> variable ~ opt(":" ~> tpe)) ~ ("." ~> expr) ^^
+      {
+        case v ~ None ~ b => Abs(v, b)
+        case Var(v, _) ~ Some(t) ~ b => Abs(Var(v, t), b)
+      }
+
+  lazy val variable: Parser[Var] = "[a-z]".r ^^ { name => Var(name) }
+
+  /**
+   * Boolean ::= `true'
+   *           | `false'
+   */
+  lazy val boolean: Parser[LambdaExpr] =
+    "true" ^^^ True |
+      "false" ^^^ False
+
+  /**
+   * Number ::= [0-9]+
+   */
+  lazy val number: Parser[Number] =
+    "[0-9]+".r ^^ { n => Number(n.toInt) }
+
+  /**
+   * Type ::= Type `->' Type
+   *        | Type `\u2192' Type
+   *        | `Bool'
+   *        | `Nat'
+   *        | `(' Type `)'
+   */
   lazy val tpe: PackratParser[Type] =
-    (tpe<~("->" | "\u2192"))~tpe ^^ {case t1~t2 => Function(t1,t2)} |
-    "Bool" ^^^ Bool |
-    "Nat" ^^^ Nat |
-    "("~>tpe<~")"
-    
+    (tpe <~ ("->" | "\u2192")) ~ tpe ^^ { case t1 ~ t2 => Function(t1, t2) } |
+      "Bool" ^^^ Bool |
+      "Nat" ^^^ Nat |
+      "(" ~> tpe <~ ")"
+
   /**
    * Ident ::= [A-Z][a-z0-9_]*
    */
   lazy val ident = "[A-Z][A-Za-z0-9_]*".r
-    
+
   private def parsedIdent(id: String): LambdaExpr =
     environment.getExpr(id) match {
       case Some(expr) => expr
